@@ -1,8 +1,12 @@
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=x2lotmG0Ts4"><img src="https://img.youtube.com/vi/x2lotmG0Ts4/0.jpg" alt="IVOS-Demo"></a>
+</div>
+
 # USAGE
 
 ## Docker Image
 
-Create Docker Container
+Create Docker container
 ```
 xhost local:root
 
@@ -15,8 +19,7 @@ docker run \
 	qcuong98/ivos-demo
 ```
 
-In the containeer
-
+In the container
 ```
 # export QT_DEBUG_PLUGINS=1 (for debugging)
 
@@ -25,7 +28,7 @@ python gui.py --gpus <gpu_ids for fbrs and stm> --mem <mem_size> --seq /mnt/sequ
 # example: python gui.py --gpus 0 --mem 5 --seq /mnt/sequences/parkour
 ```
 
-# Credit
+# CREDIT
 
 A part of this repository is used for DAVIS Challenge 2020 Interactive
 
