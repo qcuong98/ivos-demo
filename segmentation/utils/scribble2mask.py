@@ -13,11 +13,11 @@ from . import superpixel
 
 
 class FBRS:
-    def __init__(self, visualizer=None, external=False):
+    def __init__(self, gpu_id=0, visualizer=None, external=False):
         self.visualizer = visualizer
         self.external = external
         if not self.external:
-            self.fbrs_seg = fbrs_nogui.create_controller()
+            self.fbrs_seg = fbrs_nogui.create_controller(gpu_id)
 
     @staticmethod
     def scribbles2points(scribbles_dict,
@@ -145,7 +145,7 @@ class FBRS:
                 cnt = 0
                 while cnt < 2:
                     fbrs = subprocess.run([
-                        "python", "segmentation/fbrs/haha.py",
+                        "python", "segmentation/fbrs/haha.py", str(gpu_id),
                         "pickles/fbrs_input.pkl", "pickles/fbrs_output.npy"
                     ])
                     if fbrs.returncode == 0:

@@ -15,14 +15,14 @@ def parse_args():
     args['norm_radius'] = 260
     args['cfg'] = "segmentation/fbrs/config.yml"
 
-    args['device'] = torch.device('cuda:0')
     cfg = exp.load_config_file(args['cfg'], return_edict=True)
 
     return args, cfg
 
-def create_controller():
+def create_controller(gpu_id):
     print("[LOADING] FBRS")
     args, cfg = parse_args()
+    args['device'] = torch.device(f'cuda:{gpu_id}')
 
     torch.backends.cudnn.deterministic = True
     checkpoint_path = utils.find_checkpoint(cfg.INTERACTIVE_MODELS_PATH, args['checkpoint'])

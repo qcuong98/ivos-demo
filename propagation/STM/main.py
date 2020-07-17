@@ -12,13 +12,13 @@ import config
 
 
 class STM_Model():
-    def __init__(self, pth_path, memory_size):
+    def __init__(self, pth_path, memory_size, gpu_id=0):
         print("[LOADING] STM")
 
         cuda = torch.cuda.is_available()
-        self.model = nn.DataParallel(STM(), device_ids=[1])
+        self.model = nn.DataParallel(STM(gpu_id), device_ids=[gpu_id])
         if cuda:
-            self.model.to(torch.device('cuda:1'))
+            self.model.to(torch.device(f'cuda:{gpu_id}'))
         self.model.load_state_dict(torch.load(pth_path))
         self.model.eval()
         self.data_helper = DataHelper()
@@ -119,8 +119,8 @@ class STM_Model():
                                            annotated_frame_id,
                                            0,
                                            N=config.N_REFINES)
-        _pred, _Es = self.Run_video(Fs, Ms, config.N_REFINES, n_objects, self.keys,
-                                    self.values, self.cnt_key)
+        _pred, _Es = self.Run_video(Fs, Ms, config.N_REFINES, n_objects,
+                                    self.keys, self.values, self.cnt_key)
         return _pred[-1]
 
     def propagate(self, frame_imgs, frame_mask, n_objects, annotated_frames):
@@ -140,7 +140,9 @@ class STM_Model():
         if left_frame < 0:
             _left = 0
         else:
-            _left = (left_frame + annotated_frame_id) // 2
+            _left = min(annotated_frame_id - config.MIN_PROPAGATION_FRAMES,
+                        (left_frame + annotated_frame_id) // 2)
+            _left = max(0, _left)
 
         Fs, Ms = self.data_helper.get_data(frame_imgs, pred, n_objects,
                                            annotated_frame_id, _left, -1)
@@ -156,7 +158,9 @@ class STM_Model():
         if right_frame > n_frames - 1:
             _right = n_frames - 1
         else:
-            _right = (right_frame + annotated_frame_id) // 2
+            _right = max(annotated_frame_id + config.MIN_PROPAGATION_FRAMES,
+                        (right_frame + annotated_frame_id) // 2)
+            _right = min(n_frames - 1, _right)
 
         Fs, Ms = self.data_helper.get_data(frame_imgs, pred, n_objects,
                                            annotated_frame_id, _right, 1)

@@ -20,12 +20,12 @@ import os
 import copy
 
 
-def ToCuda(xs):
+def ToCuda(xs, gpu_id):
     if torch.cuda.is_available():
         if isinstance(xs, list) or isinstance(xs, tuple):
-            return [x.to(torch.device('cuda:1')) for x in xs]
+            return [x.to(torch.device(f'cuda:{gpu_id}')) for x in xs]
         else:
-            return xs.to(torch.device('cuda:1')) 
+            return xs.to(torch.device(f'cuda:{gpu_id}')) 
     else:
         return xs
 

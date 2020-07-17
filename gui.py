@@ -32,7 +32,7 @@ from utils import pascal_color_map, load_frames, overlay_davis, overlay_checker,
 
 
 class App(QWidget):
-    def __init__(self, sequence, n_objects, memory_size):
+    def __init__(self, sequence, n_objects, memory_size, fbrs_gpu, stm_gpu):
         super().__init__()
         self.sequence = sequence
         self.n_objects = n_objects
@@ -40,7 +40,7 @@ class App(QWidget):
         self.frames = load_frames('sequences/' + self.sequence)
         self.num_frames, self.height, self.width = self.frames.shape[:3]
         # init model
-        self.model = model(self.frames, self.n_objects, self.memory_size)
+        self.model = model(self.frames, self.n_objects, self.memory_size, fbrs_gpu, stm_gpu)
 
         # get color map
         self.cmap = pascal_color_map(normalized=True)
@@ -112,6 +112,7 @@ class App(QWidget):
         navi.addStretch(1)
         navi.addWidget(QLabel('Overlay Mode'))
         navi.addWidget(self.overlay_combo)
+        navi.addStretch(1)
         navi.addWidget(QLabel('Object Strokes'))
         navi.addWidget(self.object_spin)
         navi.addStretch(1)
@@ -276,11 +277,15 @@ class App(QWidget):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="args")
-    parser.add_argument("-seq", type=str, required=True)
-    parser.add_argument("-nobjects", type=int, default=5)
-    parser.add_argument("-mem", type=int, default=5)
+    parser.add_argument("--seq", type=str, required=True)
+    parser.add_argument("--nobjects", type=int, default=5)
+    parser.add_argument("--mem", type=int, default=5)
+    parser.add_argument("--gpus", nargs='+', type=int, default=[0])
     args = parser.parse_args()
 
+    fbrs_gpu = args.gpus[0]
+    stm_gpu = args.gpus[1] if len(args.gpus) > 1 else args.gpus[0]
+
     app = QApplication(sys.argv)
-    ex = App(args.seq, args.nobjects, args.mem)
+    ex = App(args.seq, args.nobjects, args.mem, fbrs_gpu, stm_gpu)
     sys.exit(app.exec_())

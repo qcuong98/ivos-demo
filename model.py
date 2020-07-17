@@ -1,11 +1,11 @@
 import numpy as np
 
 from segmentation.utils.scribble2mask import FBRS
-from propagate.STM.main import STM_Model
+from propagation.STM.main import STM_Model
 
 
 class model():
-    def __init__(self, frames, n_objects, memory_size):
+    def __init__(self, frames, n_objects, memory_size, fbrs_gpu, stm_gpu):
         self.frames = frames
         self.memory_size = memory_size
         self.n_objects = n_objects
@@ -13,14 +13,16 @@ class model():
         self.n_frames, self.height, self.width = self.frames.shape[:3]
         self.current_masks = np.zeros(self.frames.shape[:3], dtype=np.uint8)
         self.annotated_frames = []
-        self.first_interation = True
+        self.first_interation = False
 
-        self.fbrs = FBRS(visualizer=None, external=False)
-        self.stm = STM_Model("propagate/STM/STM_weights.pth", memory_size)
+        self.fbrs = FBRS(fbrs_gpu, visualizer=None, external=False)
+        self.stm = STM_Model("propagation/STM/STM_weights.pth", memory_size, stm_gpu)
 
     def run_interaction(self, scribbles):
         target = scribbles['annotated_frame']
-        self.annotated_frames.append(target)
+        if len(self.annotated_frames
+               ) == 0 or self.annotated_frames[-1] != target:
+            self.annotated_frames.append(target)
 
         annotated_mask = self.fbrs.scribble2mask(self.current_masks[target],
                                                  scribbles,
@@ -40,6 +42,6 @@ class model():
         self.first_interation = False
 
         new_masks = self.stm.propagate(self.frames, self.current_masks,
-                                         self.n_objects, self.annotated_frames)
+                                       self.n_objects, self.annotated_frames)
         self.current_masks = np.copy(new_masks)
         print(f'[Propagation] Done')
