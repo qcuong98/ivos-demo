@@ -37,7 +37,7 @@ class App(QWidget):
         self.sequence = sequence
         self.n_objects = n_objects
         self.memory_size = memory_size
-        self.frames = load_frames('sequences/' + self.sequence)
+        self.frames = load_frames(self.sequence)
         self.num_frames, self.height, self.width = self.frames.shape[:3]
         # init model
         self.model = model(self.frames, self.n_objects, self.memory_size, fbrs_gpu, stm_gpu)
@@ -277,10 +277,10 @@ class App(QWidget):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="args")
-    parser.add_argument("--seq", type=str, required=True)
-    parser.add_argument("--nobjects", type=int, default=5)
-    parser.add_argument("--mem", type=int, default=5)
-    parser.add_argument("--gpus", nargs='+', type=int, default=[0])
+    parser.add_argument("--seq", type=str, help='video sequence directory', required=True)
+    parser.add_argument("--nobjects", type=int, help='number of objects', default=5)
+    parser.add_argument("--mem", type=int, help='memory size of memory-based model', default=5)
+    parser.add_argument("--gpus", nargs='+', type=int, help='gpu ids need for modules', default=[0])
     args = parser.parse_args()
 
     fbrs_gpu = args.gpus[0]

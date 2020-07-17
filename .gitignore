@@ -1,12 +1,5 @@
-config.py
-
-# Sequence frames
-sequences/
-
-# Weights files
-**/*.pkl
 **/*.pth
+**/*.pkl
 
-# Utils
 .vscode/
 **/__pycache__/

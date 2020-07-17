@@ -39,6 +39,9 @@ class model():
         print(f'[Interaction] User Interaction on frame {target}')
 
     def run_propagation(self):
+        if len(self.annotated_frames) == 0:
+            return
+            
         self.first_interation = False
 
         new_masks = self.stm.propagate(self.frames, self.current_masks,
