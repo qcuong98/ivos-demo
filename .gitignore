@@ -1,5 +1,7 @@
 **/*.pth
 **/*.pkl
 
+visualized/**
+
 .vscode/
 **/__pycache__/

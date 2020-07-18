@@ -8,6 +8,6 @@ def main(img, n_segments):
     # loop over the number of segments
     # apply SLIC and extract (approximately) the supplied number
     # of segments
-    segments = slic(image, n_segments = n_segments, sigma = 5)
+    segments = slic(image, n_segments = n_segments, sigma = 5, start_label = 0)
 
     return segments

@@ -26,6 +26,9 @@ import time
 import os
 import copy
 import random
+import uuid
+import shutil
+import glob
 
 from model import model
 from utils import pascal_color_map, load_frames, overlay_davis, overlay_checker, overlay_color, overlay_fade
@@ -34,6 +37,10 @@ from utils import pascal_color_map, load_frames, overlay_davis, overlay_checker,
 class App(QWidget):
     def __init__(self, sequence, n_objects, memory_size, fbrs_gpu, stm_gpu):
         super().__init__()
+
+        self.session_id = uuid.uuid1().hex
+        print(f'Sesssion ID: {self.session_id}')
+
         self.sequence = sequence
         self.n_objects = n_objects
         self.memory_size = memory_size
@@ -58,6 +65,8 @@ class App(QWidget):
         self.play_button.clicked.connect(self.on_play)
         self.run_button = QPushButton('Propagate!')
         self.run_button.clicked.connect(self.on_run)
+        self.visualize_button = QPushButton('Get Interactive Video')
+        self.visualize_button.clicked.connect(self.on_visualize)
 
         # LCD
         self.lcd = QTextEdit()
@@ -117,6 +126,8 @@ class App(QWidget):
         navi.addWidget(self.object_spin)
         navi.addStretch(1)
         navi.addWidget(self.run_button)
+        navi.addStretch(1)
+        navi.addWidget(self.visualize_button)
 
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
@@ -201,6 +212,23 @@ class App(QWidget):
         self.show_current()
         self.reset_scribbles()
         self.clear_strokes()
+
+    def on_visualize(self):
+        frames_dir = os.path.join('visualized', self.session_id, 'frames')
+        masks_dir = os.path.join('visualized', self.session_id, 'masks')
+
+        if not os.path.isdir(frames_dir):
+            os.makedirs(frames_dir)
+            fnames = glob.glob(os.path.join(self.sequence, '*.jpg'))
+            fnames.sort()
+            for i, fname in enumerate(fnames):
+                frame_ext = os.path.splitext(fname)[1]
+                shutil.copy2(fname, os.path.join(frames_dir, f'{i:06}{frame_ext}'))
+
+        if not os.path.isdir(masks_dir):
+            os.makedirs(masks_dir)
+        for i, mask in enumerate(self.model.current_masks):
+            Image.fromarray(mask).save(os.path.join(masks_dir, f'{i:06}.png'))
 
     def on_prev(self):
         self.clear_strokes()
