@@ -40,11 +40,11 @@ python gui.py \
 *File **objects.json** describes that there are 3 object instances in the video sequence. Name of objects with id from 1 to 3 are **woman_1**, **woman_2**, and **woman_3**, respectively.*
 ```json
 {
-    "objects": [
-        "woman_1",
+	"objects": [
+		"woman_1",
 		"woman_2",
 		"woman_3",
-    ]
+	]
 }
 ```
 #### If json config is not specified, the default number of objecs is 5, and name of objects will be **object_1**, **object_2**, etc.
