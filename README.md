@@ -4,13 +4,17 @@
 
 # USAGE
 
+## Download Video Sequences
+
+Download from [Google Drive link](https://drive.google.com/file/d/1j_BYZm8G7689nEKd4GGxNtcv4WpLxzUk/view?usp=sharing) and unzip it
+
 ## Docker Image
 
 Create Docker container
 ```
 xhost local:root
 
-export $SEQUENCES=<path of sequences>
+export $SEQUENCES=<absolute path of sequences>
 
 docker run \
 	-v $SEQUENCES:/mnt/sequences \
