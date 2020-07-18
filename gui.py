@@ -29,13 +29,15 @@ import random
 import uuid
 import shutil
 import glob
+import json
 
 from model import model
 from utils import pascal_color_map, load_frames, overlay_davis, overlay_checker, overlay_color, overlay_fade
+import config
 
 
 class App(QWidget):
-    def __init__(self, sequence, n_objects, memory_size, fbrs_gpu, stm_gpu):
+    def __init__(self, sequence, n_objects, config, memory_size, fbrs_gpu, stm_gpu):
         super().__init__()
 
         self.session_id = uuid.uuid1().hex
@@ -43,6 +45,7 @@ class App(QWidget):
 
         self.sequence = sequence
         self.n_objects = n_objects
+        self.config = config
         self.memory_size = memory_size
         self.frames = load_frames(self.sequence)
         self.num_frames, self.height, self.width = self.frames.shape[:3]
@@ -63,9 +66,11 @@ class App(QWidget):
         self.next_button.clicked.connect(self.on_next)
         self.play_button = QPushButton('Play')
         self.play_button.clicked.connect(self.on_play)
+        self.reset_button = QPushButton('Reset')
+        self.reset_button.clicked.connect(self.on_reset)
         self.run_button = QPushButton('Propagate!')
         self.run_button.clicked.connect(self.on_run)
-        self.visualize_button = QPushButton('Get Interactive Video')
+        self.visualize_button = QPushButton('Visualize')
         self.visualize_button.clicked.connect(self.on_visualize)
 
         # LCD
@@ -95,6 +100,7 @@ class App(QWidget):
         # spinbox
         self.object_spin = QSpinBox(self)
         self.object_spin.setMinimum(1)
+        self.object_spin.setMaximum(self.n_objects)
         self.object_spin.setValue(1)
 
         # canvas
@@ -124,6 +130,8 @@ class App(QWidget):
         navi.addStretch(1)
         navi.addWidget(QLabel('Object Strokes'))
         navi.addWidget(self.object_spin)
+        # navi.addStretch(1)
+        # navi.addWidget(self.reset_button)
         navi.addStretch(1)
         navi.addWidget(self.run_button)
         navi.addStretch(1)
@@ -216,6 +224,7 @@ class App(QWidget):
     def on_visualize(self):
         frames_dir = os.path.join('visualized', self.session_id, 'frames')
         masks_dir = os.path.join('visualized', self.session_id, 'masks')
+        json_dir = os.path.join('visualized', self.session_id, 'objects.json')
 
         if not os.path.isdir(frames_dir):
             os.makedirs(frames_dir)
@@ -229,6 +238,9 @@ class App(QWidget):
             os.makedirs(masks_dir)
         for i, mask in enumerate(self.model.current_masks):
             Image.fromarray(mask).save(os.path.join(masks_dir, f'{i:06}.png'))
+
+        with open(json_dir, 'w') as outfile:
+            json.dump(self.config, outfile)
 
     def on_prev(self):
         self.clear_strokes()
@@ -302,11 +314,20 @@ class App(QWidget):
         self.model.run_interaction(self.scribbles)
         self.show_current()
 
+    def on_reset(self):
+        self.show_current()
+        self.reset_scribbles()
+        self.clear_strokes()
+
+def read_config(config_dir):
+    with open(config_dir, 'r') as json_file:
+        data = json.load(json_file)
+        return data
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="args")
-    parser.add_argument("--seq", type=str, help='video sequence directory', required=True)
-    parser.add_argument("--nobjects", type=int, help='number of objects', default=5)
+    parser.add_argument("--seq", type=str, help='directory of video sequence', required=True)
+    parser.add_argument("--config", type=str, help='directory of objects config file', required=False)
     parser.add_argument("--mem", type=int, help='memory size of memory-based model', default=5)
     parser.add_argument("--gpus", nargs='+', type=int, help='gpu ids need for modules', default=[0])
     args = parser.parse_args()
@@ -314,6 +335,13 @@ if __name__ == '__main__':
     fbrs_gpu = args.gpus[0]
     stm_gpu = args.gpus[1] if len(args.gpus) > 1 else args.gpus[0]
 
+    if args.config is not None:
+        config = read_config(args.config)
+    else:
+        config = {'objects': ['object_{i}' for i in range(1, config.DEFAULT_N_OBJECTS + 1)]}
+
+    n_objects = len(config['objects'])
+
     app = QApplication(sys.argv)
-    ex = App(args.seq, args.nobjects, args.mem, fbrs_gpu, stm_gpu)
+    ex = App(args.seq, n_objects, config, args.mem, fbrs_gpu, stm_gpu)
     sys.exit(app.exec_())
