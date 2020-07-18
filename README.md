@@ -33,7 +33,7 @@ python gui.py \
 	[--config <json_dir>] \
 	--seq /mnt/sequences/<name-sequence>
 
-# example: python gui.py --gpus 0 --mem 5 --config objects.json --seq /mnt/sequences/india
+# example: python gui.py --gpus 0 --mem 5 --seq /mnt/sequences/india
 ```
 
 #### An example of config file objects:
