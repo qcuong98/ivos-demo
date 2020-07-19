@@ -199,7 +199,8 @@ class App(QWidget):
         # clear drawn scribbles
         if len(self.drawn_strokes) > 0:
             for line in self.drawn_strokes:
-                line.pop(0).remove()
+                if line is not None:
+                    line.pop(0).remove()
             self.drawn_strokes = []
             self.canvas.draw()
 
@@ -225,6 +226,7 @@ class App(QWidget):
         frames_dir = os.path.join('visualized', self.session_id, 'frames')
         masks_dir = os.path.join('visualized', self.session_id, 'masks')
         json_dir = os.path.join('visualized', self.session_id, 'objects.json')
+        # npy_dir = os.path.join('visualized', self.session_id, 'masks.npy')
 
         if not os.path.isdir(frames_dir):
             os.makedirs(frames_dir)
@@ -241,6 +243,8 @@ class App(QWidget):
 
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
+
+        # np.save(npy_dir, self.model.current_masks)
 
     def on_prev(self):
         self.clear_strokes()
