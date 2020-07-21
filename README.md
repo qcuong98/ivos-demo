@@ -6,7 +6,8 @@
 
 ## Download Video Sequences
 
-Download from [Google Drive link](https://drive.google.com/file/d/1j_BYZm8G7689nEKd4GGxNtcv4WpLxzUk/view?usp=sharing) and unzip it
+1. Download sequences: [DAVIS 2017](https://drive.google.com/file/d/1j_BYZm8G7689nEKd4GGxNtcv4WpLxzUk/view?usp=sharing), [Youtube-VOS](https://drive.google.com/file/d/10v1lkrlHSzcViCtQ2vXbVSvyGzim7JQc/view?usp=sharing)
+2. Unzip it
 
 ## Docker Image
 
