@@ -38,13 +38,14 @@ class model():
 
         print(f'[Interaction] User Interaction on frame {target}')
 
-    def run_propagation(self):
+    def run_propagation(self, range):
         if len(self.annotated_frames) == 0:
             return
             
+        print(f'[Propagation] From frame {range[0]} to frame {range[1]}')
         self.first_interation = False
 
         new_masks = self.stm.propagate(self.frames, self.current_masks,
-                                       self.n_objects, self.annotated_frames)
+                                       self.n_objects, self.annotated_frames, range)
         self.current_masks = np.copy(new_masks)
         print(f'[Propagation] Done')

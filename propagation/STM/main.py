@@ -123,7 +123,7 @@ class STM_Model():
                                     self.keys, self.values, self.cnt_key)
         return _pred[-1]
 
-    def propagate(self, frame_imgs, frame_mask, n_objects, annotated_frames):
+    def propagate(self, frame_imgs, frame_mask, n_objects, annotated_frames, range):
         n_frames, height, width = frame_mask.shape
 
         pred = np.copy(frame_mask)
@@ -133,16 +133,7 @@ class STM_Model():
                               annotated_frames)
 
         # Propagate
-        left_frame = -1
-        for frame_id in annotated_frames[:-1]:
-            if frame_id < annotated_frame_id:
-                left_frame = max(left_frame, frame_id)
-        if left_frame < 0:
-            _left = 0
-        else:
-            _left = min(annotated_frame_id - config.MIN_PROPAGATION_FRAMES,
-                        (left_frame + annotated_frame_id) // 2)
-            _left = max(0, _left)
+        _left = range[0]
 
         Fs, Ms = self.data_helper.get_data(frame_imgs, pred, n_objects,
                                            annotated_frame_id, _left, -1)
@@ -151,16 +142,7 @@ class STM_Model():
                                     self.cnt_key)
         pred[_left:annotated_frame_id + 1] = np.flip(_pred, 0)
 
-        right_frame = n_frames
-        for frame_id in annotated_frames[:-1]:
-            if frame_id > annotated_frame_id:
-                right_frame = min(right_frame, frame_id)
-        if right_frame > n_frames - 1:
-            _right = n_frames - 1
-        else:
-            _right = max(annotated_frame_id + config.MIN_PROPAGATION_FRAMES,
-                        (right_frame + annotated_frame_id) // 2)
-            _right = min(n_frames - 1, _right)
+        _right = range[1]
 
         Fs, Ms = self.data_helper.get_data(frame_imgs, pred, n_objects,
                                            annotated_frame_id, _right, 1)

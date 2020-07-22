@@ -11,6 +11,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QPen
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
+from QRangeSlider import QRangeSlider
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -68,7 +69,7 @@ class App(QWidget):
         self.play_button.clicked.connect(self.on_play)
         self.reset_button = QPushButton('Reset')
         self.reset_button.clicked.connect(self.on_reset)
-        self.run_button = QPushButton('Propagate!')
+        self.run_button = QPushButton('Propagate')
         self.run_button.clicked.connect(self.on_run)
         self.visualize_button = QPushButton('Visualize')
         self.visualize_button.clicked.connect(self.on_visualize)
@@ -81,9 +82,9 @@ class App(QWidget):
         self.lcd.setText('{: 3d} / {: 3d}'.format(0, self.num_frames - 1))
 
         # slide
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(self.num_frames - 1)
+        self.slider = QRangeSlider()
+        self.slider.setRangeLimit(0, self.num_frames - 1)
+        self.slider.setRange(0, self.num_frames - 1)
         self.slider.setValue(0)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.setTickInterval(1)
@@ -153,6 +154,7 @@ class App(QWidget):
         # initialize visualize
         self.viz_mode = 'fade'
         self.cursur = 0
+        self.range = (0, self.num_frames - 1)
         self.on_showing = None
         self.show_current()
 
@@ -211,12 +213,13 @@ class App(QWidget):
     def slide(self):
         self.clear_strokes()
         self.reset_scribbles()
-        self.cursur = self.slider.value()
+        self.range = self.slider.getRange()
+        self.cursur = self.slider.getValue()
         self.show_current()
         # print('slide')
 
     def on_run(self):
-        self.model.run_propagation()
+        self.model.run_propagation(self.range)
         # clear scribble and reset
         self.show_current()
         self.reset_scribbles()
@@ -249,14 +252,14 @@ class App(QWidget):
     def on_prev(self):
         self.clear_strokes()
         self.reset_scribbles()
-        self.cursur = max(0, self.cursur - 1)
+        self.cursur = max(self.range[0], self.cursur - 1)
         self.show_current()
         # print('prev')
 
     def on_next(self):
         self.clear_strokes()
         self.reset_scribbles()
-        self.cursur = min(self.cursur + 1, self.num_frames - 1)
+        self.cursur = min(self.cursur + 1, self.range[1])
         self.show_current()
         # print('next ')
 
@@ -264,8 +267,8 @@ class App(QWidget):
         self.clear_strokes()
         self.reset_scribbles()
         self.cursur += 1
-        if self.cursur > self.num_frames - 1:
-            self.cursur = 0
+        if self.cursur > self.range[1]:
+            self.cursur = self.range[0]
         self.show_current()
 
     def on_play(self):
