@@ -4,10 +4,9 @@
 
 # USAGE
 
-## Download Video Sequences
+## Prepare Videos
 
-1. Download sequences: [DAVIS 2017](https://drive.google.com/file/d/1j_BYZm8G7689nEKd4GGxNtcv4WpLxzUk/view?usp=sharing), [Youtube-VOS](https://drive.google.com/file/d/10v1lkrlHSzcViCtQ2vXbVSvyGzim7JQc/view?usp=sharing)
-2. Unzip it
+Prepare your videos or download from [here](https://drive.google.com/drive/folders/1qMKeQjGUvPwiIcOZEMUtB0n5clegyvN7?usp=sharing) 
 
 ## Docker Image
 
@@ -15,10 +14,10 @@
 ```
 xhost local:root
 
-export $SEQUENCES=<absolute path of sequences>
+export VIDEOS=<absolute path of videos folder>
 
 docker run \
-	-v $SEQUENCES:/mnt/sequences \
+	-v $VIDEOS:/mnt/videos \
 	-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY \
 	--gpus=all -u qtuser -it \
 	qcuong98/ivos-demo
@@ -32,9 +31,9 @@ python gui.py \
 	[--gpus <gpu_ids for fbrs and stm>] \
 	[--mem <mem_size>] \
 	[--config <json_dir>] \
-	--seq /mnt/sequences/<name-sequence>
+	--video /mnt/videos/<video-name>.mp4
 
-# example: python gui.py --gpus 0 --mem 5 --seq /mnt/sequences/india
+# example: python gui.py --gpus 0 --mem 5 --video /mnt/videos/india.mp4
 ```
 
 #### An example of config file objects:
@@ -48,10 +47,10 @@ python gui.py \
 	]
 }
 ```
-#### If json config is not specified, the default number of objecs is 5, and name of objects will be **object_1**, **object_2**, etc.
+#### If json config is not specified, name of objects will be **object_1**, **object_2**, ..., **object_5**.
 
 # CREDIT
 
-A part of this repository is used for DAVIS Challenge 2020 Interactive
+A part of this repository is used for DAVIS Challenge 2020 Interactive Scenario
 
 PyQt layout is modified from [Seoung Wug Oh's repository](https://github.com/seoungwugoh/ivs-demo)

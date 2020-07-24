@@ -222,7 +222,9 @@ class App(QWidget):
         # print('slide')
 
     def on_run(self):
+        self.run_button.setEnabled(False)
         self.model.run_propagation(self.range)
+        self.run_button.setEnabled(True)
         # clear scribble and reset
         self.show_current()
         self.reset_scribbles()
@@ -316,7 +318,9 @@ class App(QWidget):
         self.drawn_strokes.append(self.on_drawing)
         self.on_drawing = None
 
+        self.run_button.setEnabled(False)
         self.model.run_interaction(self.scribbles)
+        self.run_button.setEnabled(True)
         self.show_current()
 
     def on_reset(self):

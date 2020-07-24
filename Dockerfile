@@ -10,7 +10,6 @@ ENV HOME /home/$USER
 
 # Add user
 RUN adduser --quiet --disabled-password qtuser
-USER $USER
 
 # Install Miniconda
 ENV CONDA_DIR $HOME/miniconda3
@@ -37,4 +36,7 @@ RUN source activate env && pip install -q Cython==0.29.21
 RUN source activate env && pip install -q tensorboard==2.2.2 easydict==1.9 PyYAML==5.3.1 PyQt5==5.15.0 davisinteractive==1.0.4
 
 COPY . /app
+
+RUN chown -R $USER /app
+USER $USER
 WORKDIR /app
