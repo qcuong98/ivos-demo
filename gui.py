@@ -33,22 +33,26 @@ import glob
 import json
 
 from model import model
-from utils import pascal_color_map, load_frames, overlay_davis, overlay_checker, overlay_color, overlay_fade
+from utils import get_fps, pascal_color_map, load_frames, overlay_davis, overlay_checker, overlay_color, overlay_fade
 import config
 
 
 class App(QWidget):
-    def __init__(self, sequence, n_objects, config, memory_size, fbrs_gpu, stm_gpu):
+    def __init__(self, video_dir, n_objects, config, memory_size, fbrs_gpu, stm_gpu):
         super().__init__()
 
         self.session_id = uuid.uuid1().hex
         print(f'Sesssion ID: {self.session_id}')
 
-        self.sequence = sequence
+        self.video_dir = video_dir
+        self.video = cv2.VideoCapture(self.video_dir)
+        if not self.video.isOpened():
+            raise "Can't open video file"
+
         self.n_objects = n_objects
         self.config = config
         self.memory_size = memory_size
-        self.frames = load_frames(self.sequence)
+        self.frames = load_frames(self.video)
         self.num_frames, self.height, self.width = self.frames.shape[:3]
         # init model
         self.model = model(self.frames, self.n_objects, self.memory_size, fbrs_gpu, stm_gpu)
@@ -195,7 +199,6 @@ class App(QWidget):
     def reset_scribbles(self):
         self.scribbles = {}
         self.scribbles['scribbles'] = [[] for _ in range(self.num_frames)]
-        self.scribbles['sequence'] = self.sequence
 
     def clear_strokes(self):
         # clear drawn scribbles
@@ -226,24 +229,19 @@ class App(QWidget):
         self.clear_strokes()
 
     def on_visualize(self):
-        frames_dir = os.path.join('visualized', self.session_id, 'frames')
+        video_dir = os.path.join('visualized', self.session_id, 'video.mp4')
         masks_dir = os.path.join('visualized', self.session_id, 'masks')
         json_dir = os.path.join('visualized', self.session_id, 'objects.json')
         # npy_dir = os.path.join('visualized', self.session_id, 'masks.npy')
-
-        if not os.path.isdir(frames_dir):
-            os.makedirs(frames_dir)
-            fnames = glob.glob(os.path.join(self.sequence, '*.jpg'))
-            fnames.sort()
-            for i, fname in enumerate(fnames):
-                frame_ext = os.path.splitext(fname)[1]
-                shutil.copy2(fname, os.path.join(frames_dir, f'{i:06}{frame_ext}'))
 
         if not os.path.isdir(masks_dir):
             os.makedirs(masks_dir)
         for i, mask in enumerate(self.model.current_masks):
             Image.fromarray(mask).save(os.path.join(masks_dir, f'{i:06}.png'))
 
+        shutil.copy2(self.video_dir, video_dir)
+
+        self.config['fps'] = get_fps(self.video) 
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
 
@@ -333,7 +331,7 @@ def read_config(config_dir):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="args")
-    parser.add_argument("--seq", type=str, help='directory of video sequence', required=True)
+    parser.add_argument("--video", type=str, help='directory of video file (mp4)', required=True)
     parser.add_argument("--config", type=str, help='directory of objects config file', required=False)
     parser.add_argument("--mem", type=int, help='memory size of memory-based model', default=5)
     parser.add_argument("--gpus", nargs='+', type=int, help='gpu ids need for modules', default=[0])
@@ -345,10 +343,10 @@ if __name__ == '__main__':
     if args.config is not None:
         config = read_config(args.config)
     else:
-        config = {'objects': ['object_{i}' for i in range(1, config.DEFAULT_N_OBJECTS + 1)]}
+        config = {'objects': [f'object_{i}' for i in range(1, config.DEFAULT_N_OBJECTS + 1)]}
 
     n_objects = len(config['objects'])
 
     app = QApplication(sys.argv)
-    ex = App(args.seq, n_objects, config, args.mem, fbrs_gpu, stm_gpu)
+    ex = App(args.video, n_objects, config, args.mem, fbrs_gpu, stm_gpu)
     sys.exit(app.exec_())

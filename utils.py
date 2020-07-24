@@ -20,6 +20,8 @@ import cv2
 import random
 import glob
 
+def get_fps(video):
+    return video.get(cv2.CAP_PROP_FPS)
 
 def pascal_color_map(N=256, normalized=False):
     """
@@ -47,21 +49,15 @@ def pascal_color_map(N=256, normalized=False):
     return cmap
 
 
-def load_frames(path, size=None, num_frames=None):
-    fnames = glob.glob(os.path.join(path, '*.jpg'))
-    fnames.sort()
+def load_frames(video, size=None):
     frame_list = []
-    for i, fname in enumerate(fnames):
-        if size:
-            frame_list.append(
-                np.array(Image.open(fname).convert('RGB').resize(
-                    (size[0], size[1]), Image.BICUBIC),
-                         dtype=np.uint8))
-        else:
-            frame_list.append(
-                np.array(Image.open(fname).convert('RGB'), dtype=np.uint8))
-        if num_frames and i > num_frames:
+
+    while True:
+        success, image = video.read()
+        if not success:
             break
+        frame_list.append(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
     frames = np.stack(frame_list, axis=0)
     return frames
 
