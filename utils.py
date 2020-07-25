@@ -20,8 +20,10 @@ import cv2
 import random
 import glob
 
+
 def get_fps(video):
     return video.get(cv2.CAP_PROP_FPS)
+
 
 def pascal_color_map(N=256, normalized=False):
     """
@@ -56,7 +58,10 @@ def load_frames(video, size=None):
         success, image = video.read()
         if not success:
             break
-        frame_list.append(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if size is not None:
+            image = cv2.resize(image, size, interpolation=cv2.INTER_CUBIC)
+        frame_list.append(image)
 
     frames = np.stack(frame_list, axis=0)
     return frames
@@ -65,6 +70,7 @@ def load_frames(video, size=None):
 def overlay_davis(image, mask, rgb=[255, 0, 0], cscale=2, alpha=0.5):
     im_overlay = utils.visualization.overlay_mask(image, mask, alpha=alpha)
     return im_overlay.astype(image.dtype)
+
 
 def checkerboard(img_size, block_size):
     width = int(

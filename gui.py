@@ -38,7 +38,8 @@ import config
 
 
 class App(QWidget):
-    def __init__(self, video_dir, n_objects, config, memory_size, fbrs_gpu, stm_gpu):
+    def __init__(self, video_dir, n_objects, config, memory_size, fbrs_gpu,
+                 stm_gpu):
         super().__init__()
 
         self.session_id = uuid.uuid1().hex
@@ -49,19 +50,26 @@ class App(QWidget):
         if not self.video.isOpened():
             raise "Can't open video file"
 
+        self.raw_height = int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.raw_width = int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH))
+
+        height = 480
+        width = int(self.raw_width / self.raw_height * height)
+
         self.n_objects = n_objects
         self.config = config
         self.memory_size = memory_size
-        self.frames = load_frames(self.video)
+        self.frames = load_frames(self.video, (width, height))
         self.num_frames, self.height, self.width = self.frames.shape[:3]
         # init model
-        self.model = model(self.frames, self.n_objects, self.memory_size, fbrs_gpu, stm_gpu)
+        self.model = model(self.frames, self.n_objects, self.memory_size,
+                           fbrs_gpu, stm_gpu)
 
         # get color map
         self.cmap = pascal_color_map(normalized=True)
 
         # set window
-        self.setWindowTitle('[Demo] Interaction Video Object Segmentation')
+        self.setWindowTitle('VOS Annotation Tool')
         self.setGeometry(100, 100, self.width, self.height + 100)
 
         # buttons
@@ -239,11 +247,13 @@ class App(QWidget):
         if not os.path.isdir(masks_dir):
             os.makedirs(masks_dir)
         for i, mask in enumerate(self.model.current_masks):
-            Image.fromarray(mask).save(os.path.join(masks_dir, f'{i:06}.png'))
+            Image.fromarray(mask).resize(
+                (self.raw_width, self.raw_height),
+                Image.NEAREST).save(os.path.join(masks_dir, f'{i:06}.png'))
 
         shutil.copy2(self.video_dir, video_dir)
 
-        self.config['fps'] = get_fps(self.video) 
+        self.config['fps'] = get_fps(self.video)
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
 
@@ -328,17 +338,32 @@ class App(QWidget):
         self.reset_scribbles()
         self.clear_strokes()
 
+
 def read_config(config_dir):
     with open(config_dir, 'r') as json_file:
         data = json.load(json_file)
         return data
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="args")
-    parser.add_argument("--video", type=str, help='directory of video file (mp4)', required=True)
-    parser.add_argument("--config", type=str, help='directory of objects config file', required=False)
-    parser.add_argument("--mem", type=int, help='memory size of memory-based model', default=5)
-    parser.add_argument("--gpus", nargs='+', type=int, help='gpu ids need for modules', default=[0])
+    parser.add_argument("--video",
+                        type=str,
+                        help='directory of video file (mp4)',
+                        required=True)
+    parser.add_argument("--config",
+                        type=str,
+                        help='directory of objects config file',
+                        required=False)
+    parser.add_argument("--mem",
+                        type=int,
+                        help='memory size of memory-based model',
+                        default=5)
+    parser.add_argument("--gpus",
+                        nargs='+',
+                        type=int,
+                        help='gpu ids need for modules',
+                        default=[0])
     args = parser.parse_args()
 
     fbrs_gpu = args.gpus[0]
@@ -347,7 +372,10 @@ if __name__ == '__main__':
     if args.config is not None:
         config = read_config(args.config)
     else:
-        config = {'objects': [f'object_{i}' for i in range(1, config.DEFAULT_N_OBJECTS + 1)]}
+        config = {
+            'objects':
+            [f'object_{i}' for i in range(1, config.DEFAULT_N_OBJECTS + 1)]
+        }
 
     n_objects = len(config['objects'])
 
