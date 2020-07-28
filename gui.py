@@ -42,7 +42,7 @@ class App(QWidget):
                  stm_gpu):
         super().__init__()
 
-        self.session_id = uuid.uuid1().hex
+        self.session_id = str(uuid.uuid1())
         print(f'Sesssion ID: {self.session_id}')
 
         self.video_dir = video_dir
