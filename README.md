@@ -29,8 +29,9 @@ docker run \
 
 python gui.py \
 	[--gpus <gpu_ids for fbrs and stm>] \
-	[--mem <mem_size>] \
-	[--config <json_dir>] \
+	[--mem <memory size>] \
+	[--config <json directory>] \
+	[--step <step frame>] \
 	--video /mnt/videos/<video-name>.mp4
 
 # example: python gui.py --gpus 0 --mem 5 --video /mnt/videos/india.mp4
