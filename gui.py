@@ -38,17 +38,16 @@ import config
 
 
 class App(QWidget):
-    def __init__(self, video_dir, n_objects, config, memory_size, fbrs_gpu,
-                 stm_gpu):
+    def __init__(self, video, video_dir, step, n_objects, config, memory_size,
+                 fbrs_gpu, stm_gpu):
         super().__init__()
 
         self.session_id = str(uuid.uuid1())
         print(f'Sesssion ID: {self.session_id}')
 
+        self.video = video
         self.video_dir = video_dir
-        self.video = cv2.VideoCapture(self.video_dir)
-        if not self.video.isOpened():
-            raise "Can't open video file"
+        self.step = step
 
         self.raw_height = int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.raw_width = int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -59,7 +58,8 @@ class App(QWidget):
         self.n_objects = n_objects
         self.config = config
         self.memory_size = memory_size
-        self.frames = load_frames(self.video, (width, height))
+        self.frames, self.frame_ids = load_frames(self.video, self.step,
+                                                  (width, height))
         self.num_frames, self.height, self.width = self.frames.shape[:3]
         # init model
         self.model = model(self.frames, self.n_objects, self.memory_size,
@@ -70,7 +70,7 @@ class App(QWidget):
 
         # set window
         self.setWindowTitle('VOS Annotation Tool')
-        self.setGeometry(100, 100, self.width, self.height + 100)
+        self.setGeometry(100, 100, self.width + 200, self.height + 100)
 
         # buttons
         self.prev_button = QPushButton('Prev')
@@ -90,8 +90,8 @@ class App(QWidget):
         self.lcd = QTextEdit()
         self.lcd.setReadOnly(True)
         self.lcd.setMaximumHeight(28)
-        self.lcd.setMaximumWidth(100)
-        self.lcd.setText('{: 3d} / {: 3d}'.format(0, self.num_frames - 1))
+        self.lcd.setMaximumWidth(150)
+        self.lcd.setText(f'{0: 3d} / {0: 3d} / {self.num_frames - 1: 3d}')
 
         # slide
         self.slider = QRangeSlider()
@@ -200,8 +200,8 @@ class App(QWidget):
             self.on_showing.remove()
         self.on_showing = self.ax.imshow(viz)
         self.canvas.draw()
-        self.lcd.setText('{: 3d} / {: 3d}'.format(self.cursur,
-                                                  self.num_frames - 1))
+        l, r = self.slider.getRange()
+        self.lcd.setText(f'{l: 3d} / {self.cursur: 3d} / {r: 3d}')
         self.slider.setValue(self.cursur)
 
     def reset_scribbles(self):
@@ -240,16 +240,15 @@ class App(QWidget):
 
     def on_visualize(self):
         video_dir = os.path.join('visualized', self.session_id, 'video.mp4')
-        masks_dir = os.path.join('visualized', self.session_id, 'masks')
+        masks_dir = os.path.join('visualized', self.session_id, 'pivot_masks')
         json_dir = os.path.join('visualized', self.session_id, 'objects.json')
-        # npy_dir = os.path.join('visualized', self.session_id, 'masks.npy')
 
         if not os.path.isdir(masks_dir):
             os.makedirs(masks_dir)
         for i, mask in enumerate(self.model.current_masks):
             Image.fromarray(mask).resize(
-                (self.raw_width, self.raw_height),
-                Image.NEAREST).save(os.path.join(masks_dir, f'{i:06}.png'))
+                (self.raw_width, self.raw_height), Image.NEAREST).save(
+                    os.path.join(masks_dir, f'{self.frame_ids[i]:06}.png'))
 
         shutil.copy2(self.video_dir, video_dir)
 
@@ -351,6 +350,11 @@ if __name__ == '__main__':
                         type=str,
                         help='directory of video file (mp4)',
                         required=True)
+    parser.add_argument(
+        "--step",
+        type=int,
+        help='number of frames stepped (max number of annotated frames = 1000)',
+        default=1)
     parser.add_argument("--config",
                         type=str,
                         help='directory of objects config file',
@@ -366,6 +370,16 @@ if __name__ == '__main__':
                         default=[0])
     args = parser.parse_args()
 
+    video = cv2.VideoCapture(args.video)
+    if not video.isOpened():
+        raise "Can't open video file"
+
+    n_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    step = args.step
+    if n_frames // step > config.MAX_ANNOTATED_FRAMES:
+        step = n_frames // config.MAX_ANNOTATED_FRAMES
+    print(f'Number of frames: {n_frames} - Step: {step}')
+
     fbrs_gpu = args.gpus[0]
     stm_gpu = args.gpus[1] if len(args.gpus) > 1 else args.gpus[0]
 
@@ -380,5 +394,6 @@ if __name__ == '__main__':
     n_objects = len(config['objects'])
 
     app = QApplication(sys.argv)
-    ex = App(args.video, n_objects, config, args.mem, fbrs_gpu, stm_gpu)
+    ex = App(video, args.video, step, n_objects, config, args.mem, fbrs_gpu,
+             stm_gpu)
     sys.exit(app.exec_())

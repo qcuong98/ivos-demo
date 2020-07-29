@@ -51,20 +51,27 @@ def pascal_color_map(N=256, normalized=False):
     return cmap
 
 
-def load_frames(video, size=None):
+def load_frames(video, step, size=None):
     frame_list = []
+    frame_ids = []
 
+    count = 0
     while True:
         success, image = video.read()
         if not success:
             break
+
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if size is not None:
             image = cv2.resize(image, size, interpolation=cv2.INTER_CUBIC)
         frame_list.append(image)
+        frame_ids.append(count)
+
+        count += step
+        video.set(cv2.CAP_PROP_POS_FRAMES, count)
 
     frames = np.stack(frame_list, axis=0)
-    return frames
+    return frames, frame_ids
 
 
 def overlay_davis(image, mask, rgb=[255, 0, 0], cscale=2, alpha=0.5):
