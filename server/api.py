@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template, send_file, send_from_directory
 import json
 import os
 import io
 
 from mask_extractor import MaskExtractor
 import utils
-from propagation.STM.main import STM_Model
+# from propagation.STM.main import STM_Model
 
 with open('server/config.json', 'r') as f:
     config = json.load(f)
@@ -15,6 +15,16 @@ app = Flask(__name__)
 stm = None
 # stm = STM_Model("propagation/STM/STM_weights.pth", config['memory_size'],
 #                 config['gpu_id'])
+
+
+@app.route('/', methods=['GET'])
+def homepage():
+    return send_from_directory('static', 'index.html')
+
+
+@app.route('/<uuid:video_id>', methods=['GET'])
+def video_page(video_id):
+    return send_from_directory('static', 'video.html')
 
 
 @app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png',
