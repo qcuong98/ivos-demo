@@ -5,3 +5,6 @@ visualized/**
 
 .vscode/
 **/__pycache__/
+
+node_modules/*
+server/public/index.js
