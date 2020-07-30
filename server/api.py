@@ -22,9 +22,22 @@ def homepage():
     return send_from_directory('static', 'index.html')
 
 
-@app.route('/<uuid:video_id>', methods=['GET'])
-def video_page(video_id):
+@app.route('/<uuid:session_key>', methods=['GET'])
+def session_page(session_key):
     return send_from_directory('static', 'video.html')
+
+
+@app.route('/sessions', methods=['GET'])
+def get_list_sessions():
+    list_sessions_path = [
+        f.path for f in os.scandir(config['sessions_dir']) if f.is_dir()
+    ]
+    list_sessions = [
+        os.path.split(session_path)[1] for session_path in list_sessions_path
+    ]
+    data = {}
+    data['sessions'] = list_sessions
+    return jsonify(data), 200
 
 
 @app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png',
@@ -47,11 +60,10 @@ def get_obj_mask(session_key, frame_id, object_id):
     output = io.BytesIO()
     images[object_id].save(output, 'PNG')
     output.seek(0)
-    return send_file(
-        output,
-        mimetype='image/png',
-        as_attachment=True,
-        attachment_filename=f'{frame_id:06}-{object_id}.png'), 200
+    return send_file(output,
+                     mimetype='image/png',
+                     as_attachment=True,
+                     attachment_filename=f'{frame_id:06}-{object_id}.png'), 200
 
 
 if __name__ == '__main__':

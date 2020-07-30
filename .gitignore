@@ -2,6 +2,7 @@
 **/*.pkl
 
 visualized/**
+server/static/sessions/
 
 .vscode/
 **/__pycache__/

@@ -1,5 +1,5 @@
 {
-    "sessions_dir": "visualized",
+    "sessions_dir": "server/static/sessions",
     "memory_size": 5,
     "gpu_id": 0
 }
