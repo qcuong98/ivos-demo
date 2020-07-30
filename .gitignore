@@ -2,6 +2,10 @@
 **/*.pkl
 
 visualized/**
+server/static/sessions/
 
 .vscode/
 **/__pycache__/
+
+node_modules/*
+server/static/*.js
