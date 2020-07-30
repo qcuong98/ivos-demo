@@ -328,7 +328,7 @@ class App(QWidget):
         self.on_drawing = None
 
         self.run_button.setEnabled(False)
-        self.model.run_interaction(self.scribbles)
+        self.model.run_interaction(self.scribbles, self.range)
         self.run_button.setEnabled(True)
         self.show_current()
 

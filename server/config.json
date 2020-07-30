@@ -1,0 +1,5 @@
+{
+    "sessions_dir": "visualized",
+    "memory_size": 5,
+    "gpu_id": 0
+}

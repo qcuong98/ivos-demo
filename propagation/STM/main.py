@@ -70,8 +70,9 @@ class STM_Model():
         return pred, Es
 
     def init_memory_pool(self, frame_imgs, frame_mask, n_objects,
-                         annotated_frames):
+                         annotated_frames, propagation_range):
         n_frames, height, width = frame_mask.shape
+        _left, _right = propagation_range
 
         pred = np.copy(frame_mask)
         annotated_frame_id = annotated_frames[-1]
@@ -89,7 +90,8 @@ class STM_Model():
                 1,
                 annotated_frames=annotated_frames[:-1])
             for frame_id in reversed(annotated_frames[:-1]):
-                if self.cnt_key + 1 < self.Mem_number:
+                if self.cnt_key + 1 < self.Mem_number and frame_id in range(
+                        _left, _right + 1):
                     with torch.no_grad():
                         _key, _value = self.model(Fs[:, :, frame_id],
                                                   Ms[:, :, frame_id],
@@ -102,14 +104,15 @@ class STM_Model():
                     self.cnt_key += 1
         print(f'Number of STM Key-Value Pairs: {self.cnt_key + 1}')
 
-    def self_refine(self, frame_imgs, frame_mask, n_objects, annotated_frames):
+    def self_refine(self, frame_imgs, frame_mask, n_objects, annotated_frames,
+                    propagation_range):
         n_frames, height, width = frame_mask.shape
 
         pred = np.copy(frame_mask)
         annotated_frame_id = annotated_frames[-1]
 
         self.init_memory_pool(frame_imgs, frame_mask, n_objects,
-                              annotated_frames)
+                              annotated_frames, propagation_range)
 
         # Self-Refine
         Fs, Ms = self.data_helper.get_data(frame_imgs,
@@ -123,17 +126,18 @@ class STM_Model():
                                     self.keys, self.values, self.cnt_key)
         return _pred[-1]
 
-    def propagate(self, frame_imgs, frame_mask, n_objects, annotated_frames, range):
+    def propagate(self, frame_imgs, frame_mask, n_objects, annotated_frames,
+                  propagation_range):
         n_frames, height, width = frame_mask.shape
 
         pred = np.copy(frame_mask)
         annotated_frame_id = annotated_frames[-1]
 
         self.init_memory_pool(frame_imgs, frame_mask, n_objects,
-                              annotated_frames)
+                              annotated_frames, propagation_range)
 
         # Propagate
-        _left = range[0]
+        _left = propagation_range[0]
 
         Fs, Ms = self.data_helper.get_data(frame_imgs, pred, n_objects,
                                            annotated_frame_id, _left, -1)
@@ -142,7 +146,7 @@ class STM_Model():
                                     self.cnt_key)
         pred[_left:annotated_frame_id + 1] = np.flip(_pred, 0)
 
-        _right = range[1]
+        _right = propagation_range[1]
 
         Fs, Ms = self.data_helper.get_data(frame_imgs, pred, n_objects,
                                            annotated_frame_id, _right, 1)

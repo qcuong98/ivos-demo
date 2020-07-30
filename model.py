@@ -18,7 +18,7 @@ class model():
         self.fbrs = FBRS(fbrs_gpu, visualizer=None, external=False)
         self.stm = STM_Model("propagation/STM/STM_weights.pth", memory_size, stm_gpu)
 
-    def run_interaction(self, scribbles):
+    def run_interaction(self, scribbles, range):
         target = scribbles['annotated_frame']
         if len(self.annotated_frames
                ) == 0 or self.annotated_frames[-1] != target:
@@ -33,7 +33,7 @@ class model():
 
         refined_mask = self.stm.self_refine(self.frames, self.current_masks,
                                             self.n_objects,
-                                            self.annotated_frames)
+                                            self.annotated_frames, range)
         self.current_masks[target] = refined_mask
 
         print(f'[Interaction] User Interaction on frame {target}')
