@@ -16,7 +16,8 @@ class model():
         self.first_interation = False
 
         self.fbrs = FBRS(fbrs_gpu, visualizer=None, external=False)
-        self.stm = STM_Model("propagation/STM/STM_weights.pth", memory_size, stm_gpu)
+        self.stm = STM_Model("propagation/STM/STM_weights.pth", memory_size,
+                             stm_gpu)
 
     def run_interaction(self, scribbles, range):
         target = scribbles['annotated_frame']
@@ -36,16 +37,12 @@ class model():
                                             self.annotated_frames, range)
         self.current_masks[target] = refined_mask
 
-        print(f'[Interaction] User Interaction on frame {target}')
-
     def run_propagation(self, range):
         if len(self.annotated_frames) == 0:
             return
-            
-        print(f'[Propagation] From frame {range[0]} to frame {range[1]}')
         self.first_interation = False
 
         new_masks = self.stm.propagate(self.frames, self.current_masks,
-                                       self.n_objects, self.annotated_frames, range)
+                                       self.n_objects, self.annotated_frames,
+                                       range)
         self.current_masks = np.copy(new_masks)
-        print(f'[Propagation] Done')

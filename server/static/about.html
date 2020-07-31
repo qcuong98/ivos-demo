@@ -18,45 +18,18 @@
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-              <a class="nav-link" href="/">Home</span></a>
+              <a class="nav-link" href="/">Home</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/about">About</a>
+            <li class="nav-item active">
+              <a class="nav-link" href="/about">About <span class="sr-only">(current)</span></a>
             </li>
           </ul>
         </div>
       </div>
     </nav>
     <div class="container">
-      <canvas id="support-canvas"></canvas>
-      <div id="container">
-        <canvas id="main-canvas"></canvas>
-        <video id="video" controls>
-          <source type="video/mp4" src="/static/sessions/{{ video.id }}/video.mp4">
-          Your browser does not support videos
-        </video>
-      </div>
-      <div class="video-page__metadata">
-        <a href="/{{ video.id }}" class="homepage__video-item__name">
-          {{ video.id }}
-        </a>
-        <p class="homepage__video-item__date">
-          <time datetime="2020-07-30">
-            {{ video.metadata.formatted_upload_date }}
-          </time>
-        </p>
-        <div class="homepage__video-item__object-list">
-          {% for object_name in video.metadata.objects %}
-          <span>{{ object_name }}</span>
-          {% endfor %}
-        </div>
-      </div>
+      <h1>About page</h1>
     </div>
-    <script>
-      window.metadata = {{ video.metadata | safe }};
-      window.videoId = "{{ video.id }}";
-    </script>
-    <script type="text/javascript" src="/static/video.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
