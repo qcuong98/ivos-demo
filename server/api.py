@@ -41,7 +41,7 @@ def homepage():
     return render_template("index.html", video_list=video_list)
 
 
-@ app.route('/<uuid:session_key>', methods=['GET'])
+@app.route('/<uuid:session_key>', methods=['GET'])
 def session_page(session_key):
     video_id = session_key
     with open(config["sessions_dir"] + f"/{video_id}/objects.json") as f:
@@ -55,7 +55,12 @@ def session_page(session_key):
     return render_template("video.html", video=video)
 
 
-@ app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png', methods=['GET'])
+@app.route('/about', methods=['GET'])
+def about_page():
+    return render_template("about.html")
+
+
+@app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png', methods=['GET'])
 def get_obj_mask(session_key, frame_id, object_id):
     session_dir = os.path.join(config['sessions_dir'], str(session_key))
     list_pivot_frames, is_exists = utils.get_nearest_pivot_frames(
