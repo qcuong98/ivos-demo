@@ -33,7 +33,7 @@ def homepage():
         with open(config["sessions_dir"] + f"/{video_id}/objects.json") as f:
             meta = json.load(f)
             created_at = parse_date(meta["created_at"])
-            meta["created_at"] = created_at.strftime("%B %d, %Y")
+            meta["formatted_upload_date"] = created_at.strftime("%B %d, %Y")
             video_list.append({
                 "id": video_id,
                 "metadata": meta
@@ -43,20 +43,16 @@ def homepage():
 
 @ app.route('/<uuid:session_key>', methods=['GET'])
 def session_page(session_key):
-    return render_template("video.html")
-
-
-@ app.route('/sessions', methods=['GET'])
-def get_list_sessions():
-    list_sessions_path = [
-        f.path for f in os.scandir(config['sessions_dir']) if f.is_dir()
-    ]
-    list_sessions = [
-        os.path.split(session_path)[1] for session_path in list_sessions_path
-    ]
-    data = {}
-    data['sessions'] = list_sessions
-    return jsonify(data), 200
+    video_id = session_key
+    with open(config["sessions_dir"] + f"/{video_id}/objects.json") as f:
+        meta = json.load(f)
+        created_at = parse_date(meta["created_at"])
+        meta["formatted_upload_date"] = created_at.strftime("%B %d, %Y")
+        video = {
+            "id": video_id,
+            "metadata": meta
+        }
+    return render_template("video.html", video=video)
 
 
 @ app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png', methods=['GET'])

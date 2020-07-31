@@ -8,13 +8,20 @@ type Metadata = {
   objects: string[];
 };
 
-function fetchMetadata(): Promise<Metadata> {
-  return fetch("/objects.json").then((res) => res.json());
+declare global {
+  interface Window {
+    metadata: {
+      objects: string[];
+      fps: number;
+      created_at: string;
+    };
+    videoId: string;
+  }
 }
 
 window.onload = async function () {
   let { height, width } = await initialiseCanvasSize();
-  let { objects: objectNameList, fps } = await fetchMetadata();
+  let { objects: objectNameList, fps } = window.metadata;
   let video = new Video("video", fps);
 
   let canvas = document.getElementById("main-canvas") as HTMLCanvasElement;
@@ -47,7 +54,7 @@ window.onload = async function () {
 
     let frameId = video.getCurrentFrameId();
     let maskList = objectNameList.map(function (_, objectId) {
-      return new Mask(`/masks/${frameId}-${objectId + 1}.png`);
+      return new Mask(`/${window.videoId}/${frameId}/${objectId + 1}.png`);
     });
 
     function findMask(e: MouseEvent): [number, Mask | null] {
