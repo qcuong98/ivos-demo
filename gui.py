@@ -83,7 +83,7 @@ class App(QWidget):
         self.reset_button.clicked.connect(self.on_reset)
         self.run_button = QPushButton('Propagate')
         self.run_button.clicked.connect(self.on_run)
-        self.visualize_button = QPushButton('Visualize')
+        self.visualize_button = QPushButton('Satisfy')
         self.visualize_button.clicked.connect(self.on_visualize)
 
         # LCD
@@ -92,6 +92,11 @@ class App(QWidget):
         self.lcd.setMaximumHeight(28)
         self.lcd.setMaximumWidth(150)
         self.lcd.setText(f'{0: 3d} / {0: 3d} / {self.num_frames - 1: 3d}')
+
+        self.log = QTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setMaximumHeight(28)
+        self.log.setText('Ready')
 
         # slide
         self.slider = QRangeSlider()
@@ -152,9 +157,11 @@ class App(QWidget):
 
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
+        layout.addWidget(self.log)
         layout.addWidget(self.slider)
         layout.addLayout(navi)
         layout.setStretchFactor(navi, 1)
+        layout.setStretchFactor(self.log, 1)
         layout.setStretchFactor(self.canvas, 0)
         self.setLayout(layout)
 
@@ -231,7 +238,13 @@ class App(QWidget):
 
     def on_run(self):
         self.run_button.setEnabled(False)
+        self.log.setText(
+            f'[RUNNING] Propagation from frame {self.range[0]} to frame {self.range[1]}'
+        )
         self.model.run_propagation(self.range)
+        self.log.setText(
+            f'[DONE] Propagation from frame {self.range[0]} to frame {self.range[1]}'
+        )
         self.run_button.setEnabled(True)
         # clear scribble and reset
         self.show_current()
@@ -256,7 +269,8 @@ class App(QWidget):
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
 
-        # np.save(npy_dir, self.model.current_masks)
+        self.log.setText(
+            f'Visualization of session {self.session_id} is ready')
 
     def on_prev(self):
         self.clear_strokes()
@@ -328,7 +342,9 @@ class App(QWidget):
         self.on_drawing = None
 
         self.run_button.setEnabled(False)
+        self.log.setText(f'[RUNNING] Interaction on frame {self.cursur}')
         self.model.run_interaction(self.scribbles, self.range)
+        self.log.setText(f'[DONE] Interaction on frame {self.cursur}')
         self.run_button.setEnabled(True)
         self.show_current()
 
