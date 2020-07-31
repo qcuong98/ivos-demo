@@ -239,9 +239,14 @@ class App(QWidget):
         self.clear_strokes()
 
     def on_visualize(self):
-        video_dir = os.path.join('visualized', self.session_id, 'video.mp4')
-        masks_dir = os.path.join('visualized', self.session_id, 'pivot_masks')
-        json_dir = os.path.join('visualized', self.session_id, 'objects.json')
+        video_dir = os.path.join('server', 'static', 'sessions',
+                                 self.session_id, 'video.mp4')
+        masks_dir = os.path.join('server', 'static', 'sessions',
+                                 self.session_id, 'pivot_masks')
+        json_dir = os.path.join('server', 'static', 'sessions',
+                                self.session_id, 'objects.json')
+        thumbnail_dir = os.path.join('server', 'static', 'sessions',
+                                     self.session_id, 'thumbnail.png')
 
         if not os.path.isdir(masks_dir):
             os.makedirs(masks_dir)
@@ -251,12 +256,13 @@ class App(QWidget):
                     os.path.join(masks_dir, f'{self.frame_ids[i]:06}.png'))
 
         shutil.copy2(self.video_dir, video_dir)
+        Image.fromarray(self.frames[len(self.frames - 1) / 2]).resize(
+            (self.raw_width, self.raw_height),
+            Image.NEAREST).save(thumbnail_dir)
 
         self.config['fps'] = get_fps(self.video)
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
-
-        # np.save(npy_dir, self.model.current_masks)
 
     def on_prev(self):
         self.clear_strokes()
