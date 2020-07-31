@@ -1,5 +1,9 @@
 Dockerfile
-visualized/**
+server/static/sessions/**
+
 **/.git
 .vscode/
 **/__pycache__/
+
+node_modules/*
+server/static/*.js
