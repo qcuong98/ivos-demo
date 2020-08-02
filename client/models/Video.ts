@@ -20,6 +20,11 @@ class Video {
     this.fps = fps;
     this._elementId = elementId;
 
+    // @ts-ignore
+    this.video.controlBar.pictureInPictureToggle.dispose();
+    // @ts-ignore
+    this.video.controlBar.fullscreenToggle.dispose();
+
     if (this.supportRVFC()) {
       this.initialiseRVFC();
     }
