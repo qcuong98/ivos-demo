@@ -3,10 +3,6 @@ import Video from "./models/Video";
 import Mask from "./models/Mask";
 
 type MouseEventListener = (e: MouseEvent) => void;
-type Metadata = {
-  fps: number;
-  objects: string[];
-};
 
 declare global {
   interface Window {
@@ -58,8 +54,8 @@ window.onload = async function () {
     });
 
     function findMask(e: MouseEvent): [number, Mask | null] {
-      let x = (e.screenX - offsetX) / width;
-      let y = (e.screenY - offsetY) / height;
+      let x = (e.clientX - offsetX) / width;
+      let y = (e.clientY - offsetY) / height;
       for (let [index, mask] of maskList.entries()) {
         if (mask.contains(x, y)) {
           return [index, mask];
