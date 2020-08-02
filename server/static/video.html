@@ -32,7 +32,7 @@
       <canvas id="support-canvas"></canvas>
       <div id="container">
         <canvas id="main-canvas"></canvas>
-        <video id="video" class="video-js" controls data-setup='{ "aspectRatio":"854:480" }'>
+        <video id="video" class="video-js" controls data-setup='{ "aspectRatio":"{{ video.metadata.video_metadata.width }}:{{ video.metadata.video_metadata.height }}" }'>
           <source type="video/mp4" src="/static/sessions/{{ video.id }}/video.mp4">
           Your browser does not support videos
         </video>
