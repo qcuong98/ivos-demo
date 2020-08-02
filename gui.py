@@ -278,7 +278,7 @@ class App(QWidget):
         self.config['created_at'] = datetime.datetime.now().isoformat()
         self.config['video_metadata'] = {}
         self.config['video_metadata']['width'] = self.raw_width
-        self.config['video_metadata']['heigth'] = self.raw_height
+        self.config['video_metadata']['height'] = self.raw_height
         self.config['video_metadata']['n_frames'] = get_n_frames(self.video)
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
