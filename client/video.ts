@@ -15,14 +15,29 @@ declare global {
   }
 }
 
+function initialiseVideo(): Promise<Video> {
+  return new Promise(function (resolve) {
+    let video = new Video("video_html5_api", window.metadata.fps);
+    video.video.onloadedmetadata = function () {
+      resolve(video);
+    };
+  });
+}
+
 window.onload = async function () {
-  let { height, width } = await initialiseCanvasSize();
-  let { objects: objectNameList, fps } = window.metadata;
-  let video = new Video("video", fps);
+  let video = await initialiseVideo();
+
+  let { height, width } = initialiseCanvasSize();
+  window.addEventListener("resize", function () {
+    let size = initialiseCanvasSize();
+    height = size.height;
+    width = size.width;
+  });
+
+  let { objects: objectNameList } = window.metadata;
 
   let canvas = document.getElementById("main-canvas") as HTMLCanvasElement;
   let ctx = canvas.getContext("2d")!;
-  let { x: offsetX, y: offsetY } = canvas.getBoundingClientRect();
 
   let mouseMoveListener: MouseEventListener | null = null;
   let mouseClickListener: MouseEventListener | null = null;
@@ -54,6 +69,7 @@ window.onload = async function () {
     });
 
     function findMask(e: MouseEvent): [number, Mask | null] {
+      let { x: offsetX, y: offsetY } = canvas.getBoundingClientRect();
       let x = (e.clientX - offsetX) / width;
       let y = (e.clientY - offsetY) / height;
       for (let [index, mask] of maskList.entries()) {
@@ -104,7 +120,7 @@ window.onload = async function () {
   video.addEventListener("pause", initialiseMasks);
   video.addEventListener("seeked", function () {
     if (!video.isPlaying) {
-      initialiseMasks();
+      setTimeout(initialiseMasks, 10);
     }
   });
   video.addEventListener("play", cleanup);
