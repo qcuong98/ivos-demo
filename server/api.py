@@ -4,19 +4,21 @@ import json
 import os
 import io
 import time
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from mask_extractor import MaskExtractor
-import utils
-# from propagation.STM.main import STM_Model
+import api_utils
+from propagation.STM.main import STM_Model
 
 with open('server/config.json', 'r') as f:
     config = json.load(f)
 extractor = MaskExtractor()
 
 app = Flask(__name__, template_folder="static")
-stm = None
-# stm = STM_Model("propagation/STM/STM_weights.pth", config['memory_size'],
-#                 config['gpu_id'])
+stm = STM_Model("propagation/STM/STM_weights.pth", config['memory_size'],
+                config['gpu_id'])
 
 
 @app.route('/', methods=['GET'])
@@ -34,10 +36,7 @@ def homepage():
             meta = json.load(f)
             created_at = parse_date(meta["created_at"])
             meta["formatted_upload_date"] = created_at.strftime("%B %d, %Y")
-            video_list.append({
-                "id": video_id,
-                "metadata": meta
-            })
+            video_list.append({"id": video_id, "metadata": meta})
     return render_template("index.html", video_list=video_list)
 
 
@@ -48,10 +47,7 @@ def session_page(session_key):
         meta = json.load(f)
         created_at = parse_date(meta["created_at"])
         meta["formatted_upload_date"] = created_at.strftime("%B %d, %Y")
-        video = {
-            "id": video_id,
-            "metadata": meta
-        }
+        video = {"id": video_id, "metadata": meta}
     return render_template("video.html", video=video)
 
 
@@ -60,24 +56,25 @@ def about_page():
     return render_template("about.html")
 
 
-@app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png', methods=['GET'])
+@app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png',
+           methods=['GET'])
 def get_obj_mask(session_key, frame_id, object_id):
     session_dir = os.path.join(config['sessions_dir'], str(session_key))
-    list_pivot_frames, is_exists = utils.get_nearest_pivot_frames(
+    list_pivot_pairs, cur_frame, is_exists = api_utils.get_memory_query(
         session_dir, frame_id, config['memory_size'])
 
-    if list_pivot_frames is None:
+    if list_pivot_pairs is None:
         return 'Video Not Found', 404
 
     if is_exists:
-        frame = list_pivot_frames[0]
+        multi_mask = list_pivot_pairs[0][1]
     else:
-        return 'Need to propagated', 200
-        # frame = model.run_propagation(session_key, frame_id)
+        mutli_mask = stm.lazy_propagation(list_pivot_pairs, cur_frame)
 
-    images = extractor.extract(frame, utils.get_n_objects(session_dir))
+    single_masks = extractor.extract(multi_mask,
+                                     api_utils.get_n_objects(session_dir))
     output = io.BytesIO()
-    images[object_id].save(output, 'PNG')
+    single_masks[object_id].save(output, 'PNG')
     output.seek(0)
     return send_file(output,
                      mimetype='image/png',
