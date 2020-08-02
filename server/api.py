@@ -69,7 +69,10 @@ def get_obj_mask(session_key, frame_id, object_id):
     if is_exists:
         multi_mask = list_pivot_pairs[0][1]
     else:
-        mutli_mask = stm.lazy_propagation(list_pivot_pairs, cur_frame)
+        multi_mask = stm.lazy_propagation(list_pivot_pairs,
+                                          cur_frame,
+                                          api_utils.get_n_objects(session_dir),
+                                          height=480)
 
     single_masks = extractor.extract(multi_mask,
                                      api_utils.get_n_objects(session_dir))
