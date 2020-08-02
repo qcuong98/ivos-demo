@@ -1,6 +1,7 @@
 import { initialiseCanvasSize } from "./video-utils";
 import Video from "./models/Video";
 import Mask from "./models/Mask";
+import "video.js/dist/video-js.css";
 
 type MouseEventListener = (e: MouseEvent) => void;
 
@@ -15,17 +16,9 @@ declare global {
   }
 }
 
-function initialiseVideo(): Promise<Video> {
-  return new Promise(function (resolve) {
-    let video = new Video("video_html5_api", window.metadata.fps);
-    video.video.onloadedmetadata = function () {
-      resolve(video);
-    };
-  });
-}
-
 window.onload = async function () {
-  let video = await initialiseVideo();
+  let { objects: objectNameList, fps } = window.metadata;
+  let video = new Video("video", fps);
 
   let { height, width } = initialiseCanvasSize();
   window.addEventListener("resize", function () {
@@ -33,8 +26,6 @@ window.onload = async function () {
     height = size.height;
     width = size.width;
   });
-
-  let { objects: objectNameList } = window.metadata;
 
   let canvas = document.getElementById("main-canvas") as HTMLCanvasElement;
   let ctx = canvas.getContext("2d")!;
