@@ -214,8 +214,8 @@ class STM_Model():
                                            annotated_frame_id,
                                            annotated_frame_id,
                                            0,
-                                           N=config.N_REFINES)
-        _pred, _Es = self.Run_video(Fs, Ms, config.N_REFINES, n_objects,
+                                           N=2)
+        _pred, _Es = self.Run_video(Fs, Ms, 2, n_objects,
                                     self.keys, self.values, self.cnt_key)
 
         resized_pred = cv2.resize(_pred[-1], (raw_width, raw_height),
