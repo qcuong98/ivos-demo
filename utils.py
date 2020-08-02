@@ -24,6 +24,8 @@ import glob
 def get_fps(video):
     return video.get(cv2.CAP_PROP_FPS)
 
+def get_n_frames(video):
+    return int(video.get(cv2.CAP_PROP_FRAME_COUNT))
 
 def pascal_color_map(N=256, normalized=False):
     """

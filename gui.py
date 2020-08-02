@@ -34,7 +34,7 @@ import json
 import datetime
 
 from model import model
-from utils import get_fps, pascal_color_map, load_frames, overlay_davis, overlay_checker, overlay_color, overlay_fade
+from utils import get_fps, get_n_frames, pascal_color_map, load_frames, overlay_davis, overlay_checker, overlay_color, overlay_fade
 import config
 
 
@@ -276,6 +276,10 @@ class App(QWidget):
 
         self.config['fps'] = get_fps(self.video)
         self.config['created_at'] = datetime.datetime.now().isoformat()
+        self.config['video_metadata'] = {}
+        self.config['video_metadata']['width'] = self.raw_width
+        self.config['video_metadata']['heigth'] = self.raw_height
+        self.config['video_metadata']['n_frames'] = get_n_frames(self.video)
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
 
