@@ -84,7 +84,7 @@ class App(QWidget):
         self.reset_button.clicked.connect(self.on_reset)
         self.run_button = QPushButton('Propagate')
         self.run_button.clicked.connect(self.on_run)
-        self.visualize_button = QPushButton('Satisfy')
+        self.visualize_button = QPushButton('Satisfied')
         self.visualize_button.clicked.connect(self.on_visualize)
 
         # LCD
@@ -261,7 +261,6 @@ class App(QWidget):
                                 self.session_id, 'objects.json')
         thumbnail_dir = os.path.join('server', 'static', 'sessions',
                                      self.session_id, 'thumbnail.png')
-        
 
         if not os.path.isdir(masks_dir):
             os.makedirs(masks_dir)
@@ -271,7 +270,7 @@ class App(QWidget):
                     os.path.join(masks_dir, f'{self.frame_ids[i]:06}.png'))
 
         shutil.copy2(self.video_dir, video_dir)
-        Image.fromarray(self.frames[len(self.frames - 1) / 2]).resize(
+        Image.fromarray(self.frames[(self.frames.shape[0] - 1) // 2]).resize(
             (self.raw_width, self.raw_height),
             Image.NEAREST).save(thumbnail_dir)
 
