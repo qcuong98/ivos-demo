@@ -26,8 +26,15 @@ class STM_Model():
         self.Mem_number = memory_size
 
     @torch.no_grad()
-    def Run_video(self, Fs, Ms, num_frames, num_objects, _keys, _values,
-                  n_keys):
+    def Run_video(self,
+                  Fs,
+                  Ms,
+                  num_frames,
+                  num_objects,
+                  _keys,
+                  _values,
+                  n_keys,
+                  lazy=False):
         # initialize storage tensors
         to_memorize = []
         if n_keys < self.Mem_number:
@@ -46,16 +53,19 @@ class STM_Model():
 
         for t in tqdm.tqdm(range(1, num_frames)):
             # memorize
-            with torch.no_grad():
-                prev_key, prev_value = self.model(Fs[:, :, t - 1], Es[:, :,
-                                                                      t - 1],
-                                                  torch.tensor([num_objects]))
-
-            if keys is not None:
-                this_keys = torch.cat([keys, prev_key], dim=3)
-                this_values = torch.cat([values, prev_value], dim=3)
+            if lazy and t == 1:
+                this_keys, this_values = keys.clone(), values.clone()
             else:
-                this_keys, this_values = prev_key, prev_value
+                with torch.no_grad():
+                    prev_key, prev_value = self.model(
+                        Fs[:, :, t - 1], Es[:, :, t - 1],
+                        torch.tensor([num_objects]))
+
+                if keys is not None:
+                    this_keys = torch.cat([keys, prev_key], dim=3)
+                    this_values = torch.cat([values, prev_value], dim=3)
+                else:
+                    this_keys, this_values = prev_key, prev_value
 
             # segment
             with torch.no_grad():
@@ -214,9 +224,15 @@ class STM_Model():
                                            annotated_frame_id,
                                            annotated_frame_id,
                                            0,
-                                           N=2)
-        _pred, _Es = self.Run_video(Fs, Ms, 2, n_objects,
-                                    self.keys, self.values, self.cnt_key)
+                                           N=config.N_REFINES // 2 + 1)
+        _pred, _Es = self.Run_video(Fs,
+                                    Ms,
+                                    config.N_REFINES // 2 + 1,
+                                    n_objects,
+                                    self.keys,
+                                    self.values,
+                                    self.cnt_key,
+                                    lazy=True)
 
         resized_pred = cv2.resize(_pred[-1], (raw_width, raw_height),
                                   interpolation=cv2.INTER_NEAREST)
