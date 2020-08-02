@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 import numpy as np
 import tqdm
+import cv2
 
 import config
 
@@ -156,3 +157,67 @@ class STM_Model():
         pred[annotated_frame_id:_right + 1] = _pred
 
         return pred
+
+    def lazy_propagation(self, memory_pairs, query_frame, n_objects, height):
+        raw_height, raw_width = query_frame.shape[:2]
+        width = int(raw_width / raw_height * height)
+
+        frame_list = [
+            cv2.resize(frame, (width, height), interpolation=cv2.INTER_CUBIC)
+            for frame, mask in memory_pairs
+        ]
+        frame_list.append(
+            cv2.resize(query_frame, (width, height),
+                       interpolation=cv2.INTER_CUBIC))
+        frame_imgs = np.stack(frame_list, axis=0)
+
+        pred = [
+            cv2.resize(mask, (width, height), interpolation=cv2.INTER_NEAREST)
+            for frame, mask in memory_pairs
+        ]
+        pred.append(np.zeros((height, width), dtype=np.uint8))
+        pred = np.stack(pred, axis=0)
+
+        n_frames = frame_imgs.shape[0]
+
+        annotated_frames = [i for i in range(len(memory_pairs) + 1)]
+        annotated_frame_id = annotated_frames[-1]
+
+        # Get key and value from memory_pairs
+        self.keys, self.values = None, None
+        self.cnt_key = 0
+        Fs, Ms = self.data_helper.get_data(
+            frame_imgs,
+            pred,
+            n_objects,
+            0,
+            n_frames - 1,
+            1,
+            annotated_frames=annotated_frames[:-1])
+
+        for frame_id in reversed(annotated_frames[:-1]):
+            if self.cnt_key + 1 < self.Mem_number:
+                with torch.no_grad():
+                    _key, _value = self.model(Fs[:, :, frame_id], Ms[:, :,
+                                                                     frame_id],
+                                              torch.tensor([n_objects]))
+                if self.keys is not None:
+                    self.keys = torch.cat([self.keys, _key], dim=3)
+                    self.values = torch.cat([self.values, _value], dim=3)
+                else:
+                    self.keys, self.values = _key, _value  # only prev memory
+                self.cnt_key += 1
+
+        Fs, Ms = self.data_helper.get_data(frame_imgs,
+                                           pred,
+                                           n_objects,
+                                           annotated_frame_id,
+                                           annotated_frame_id,
+                                           0,
+                                           N=config.N_REFINES)
+        _pred, _Es = self.Run_video(Fs, Ms, config.N_REFINES, n_objects,
+                                    self.keys, self.values, self.cnt_key)
+
+        resized_pred = cv2.resize(_pred[-1], (raw_width, raw_height),
+                                  interpolation=cv2.INTER_NEAREST)
+        return resized_pred
