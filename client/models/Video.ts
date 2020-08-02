@@ -1,3 +1,5 @@
+import Player, { VideoJsPlayer } from "video.js";
+
 type RVFCMetadata = {
   mediaTime: number;
 };
@@ -7,38 +9,54 @@ interface RVFCVideoElement extends HTMLVideoElement {
 }
 
 class Video {
-  video: RVFCVideoElement;
+  video: VideoJsPlayer;
   fps: number;
+  _elementId: string;
   _rvfc_currentFrameId: number = 0;
+  _videoElement: RVFCVideoElement | null = null;
 
   constructor(elementId: string, fps: number) {
-    let tmp = document.getElementById(elementId);
-    if (!tmp) {
-      throw new Error(`No HTML element with ID = ${elementId} exists`);
-    }
-    this.video = tmp as RVFCVideoElement;
+    this.video = Player(elementId);
     this.fps = fps;
+    this._elementId = elementId;
 
-    if (this.video.requestVideoFrameCallback) {
+    if (this.supportRVFC()) {
       this.initialiseRVFC();
     }
+  }
+
+  supportRVFC() {
+    let videoJsElement = document.getElementById(this._elementId);
+    if (!videoJsElement) {
+      return false;
+    }
+    let videoElement = videoJsElement.querySelector("video");
+    if (!videoElement) {
+      return false;
+    }
+    this._videoElement = videoElement;
+    let rvfcVideoElement = videoElement as RVFCVideoElement;
+    if (rvfcVideoElement.requestVideoFrameCallback) {
+      return true;
+    }
+    return false;
   }
 
   initialiseRVFC() {
     let updateCurrentFrameId = (_: any, metadata: RVFCMetadata) => {
       let count = metadata.mediaTime * this.fps;
       this._rvfc_currentFrameId = Math.round(count);
-      this.video.requestVideoFrameCallback!(updateCurrentFrameId);
+      this._videoElement?.requestVideoFrameCallback!(updateCurrentFrameId);
     };
-    this.video.requestVideoFrameCallback!(updateCurrentFrameId);
+    this._videoElement?.requestVideoFrameCallback!(updateCurrentFrameId);
   }
 
   getCurrentFrameId() {
-    let ans = this.video.requestVideoFrameCallback
+    let ans = this._videoElement?.requestVideoFrameCallback
       ? this._rvfc_currentFrameId
-      : Math.round(this.video.currentTime * this.fps);
+      : Math.round(this.video.currentTime() * this.fps);
     ans = Math.max(0, ans);
-    ans = Math.min(ans, this.video.duration * this.fps);
+    ans = Math.min(ans, this.video.duration() * this.fps);
     return ans;
   }
 
@@ -46,22 +64,22 @@ class Video {
     type: K,
     listener: (this: HTMLVideoElement, e: HTMLMediaElementEventMap[K]) => any
   ) {
-    this.video.addEventListener(type, listener);
+    this._videoElement?.addEventListener(type, listener);
   }
 
   removeEventListener<K extends keyof HTMLMediaElementEventMap>(
     type: K,
     listener: (this: HTMLVideoElement, e: HTMLMediaElementEventMap[K]) => any
   ) {
-    this.video.removeEventListener(type, listener);
+    this._videoElement?.removeEventListener(type, listener);
   }
 
-  get isPlaying() {
-    return !this.video.paused;
+  get isPlaying(): boolean {
+    return !this.video.paused();
   }
 
   resume() {
-    this.video.play();
+    this._videoElement?.play();
   }
 }
 

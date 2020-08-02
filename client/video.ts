@@ -1,6 +1,7 @@
 import { initialiseCanvasSize } from "./video-utils";
 import Video from "./models/Video";
 import Mask from "./models/Mask";
+import "video.js/dist/video-js.css";
 
 type MouseEventListener = (e: MouseEvent) => void;
 
@@ -16,13 +17,18 @@ declare global {
 }
 
 window.onload = async function () {
-  let { height, width } = await initialiseCanvasSize();
   let { objects: objectNameList, fps } = window.metadata;
   let video = new Video("video", fps);
 
+  let { height, width } = initialiseCanvasSize();
+  window.addEventListener("resize", function () {
+    let size = initialiseCanvasSize();
+    height = size.height;
+    width = size.width;
+  });
+
   let canvas = document.getElementById("main-canvas") as HTMLCanvasElement;
   let ctx = canvas.getContext("2d")!;
-  let { x: offsetX, y: offsetY } = canvas.getBoundingClientRect();
 
   let mouseMoveListener: MouseEventListener | null = null;
   let mouseClickListener: MouseEventListener | null = null;
@@ -54,6 +60,7 @@ window.onload = async function () {
     });
 
     function findMask(e: MouseEvent): [number, Mask | null] {
+      let { x: offsetX, y: offsetY } = canvas.getBoundingClientRect();
       let x = (e.clientX - offsetX) / width;
       let y = (e.clientY - offsetY) / height;
       for (let [index, mask] of maskList.entries()) {
@@ -104,7 +111,7 @@ window.onload = async function () {
   video.addEventListener("pause", initialiseMasks);
   video.addEventListener("seeked", function () {
     if (!video.isPlaying) {
-      initialiseMasks();
+      setTimeout(initialiseMasks, 10);
     }
   });
   video.addEventListener("play", cleanup);
