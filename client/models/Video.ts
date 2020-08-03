@@ -21,9 +21,9 @@ class Video {
     this._elementId = elementId;
 
     // @ts-ignore
-    this.video.controlBar.pictureInPictureToggle.dispose();
+    this.video.controlBar.pictureInPictureToggle?.dispose();
     // @ts-ignore
-    this.video.controlBar.fullscreenToggle.dispose();
+    this.video.controlBar.fullscreenToggle?.dispose();
 
     if (this.supportRVFC()) {
       this.initialiseRVFC();
