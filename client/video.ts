@@ -11,14 +11,19 @@ declare global {
       objects: string[];
       fps: number;
       created_at: string;
+      video_metadata: {
+        width: number;
+        height: number; 
+        n_frames: number;
+      }
     };
     videoId: string;
   }
 }
 
 window.onload = async function () {
-  let { objects: objectNameList, fps } = window.metadata;
-  let video = new Video("video", fps);
+  let { objects: objectNameList, fps, video_metadata } = window.metadata;
+  let video = new Video("video", fps, video_metadata.n_frames);
 
   let { height, width } = initialiseCanvasSize();
   window.addEventListener("resize", function () {

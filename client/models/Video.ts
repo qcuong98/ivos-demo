@@ -11,13 +11,15 @@ interface RVFCVideoElement extends HTMLVideoElement {
 class Video {
   video: VideoJsPlayer;
   fps: number;
+  n_frames: number;
   _elementId: string;
   _rvfc_currentFrameId: number = 0;
   _videoElement: RVFCVideoElement | null = null;
 
-  constructor(elementId: string, fps: number) {
+  constructor(elementId: string, fps: number, n_frames: number) {
     this.video = Player(elementId);
     this.fps = fps;
+    this.n_frames = n_frames;
     this._elementId = elementId;
 
     // @ts-ignore
@@ -61,7 +63,7 @@ class Video {
       ? this._rvfc_currentFrameId
       : Math.round(this.video.currentTime() * this.fps);
     ans = Math.max(0, ans);
-    ans = Math.min(ans, this.video.duration() * this.fps);
+    ans = Math.min(ans, this.n_frames - 1);
     return ans;
   }
 
