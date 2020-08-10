@@ -28,7 +28,7 @@ class MaskExtractor:
         for object_id in range(1, n_objects + 1):
             mask = np.equal(frame, object_id)
             image = np.uint8(np.stack([mask, mask, mask, mask], axis=-1))
-            image[mask == True] = list(self.cmap[object_id]) + [64]
+            image[mask == True] = list(self.cmap[object_id]) + [96]
             
             image = Image.fromarray(image, mode='RGBA')
             images.append(image)
