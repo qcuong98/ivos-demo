@@ -15,17 +15,23 @@ Prepare your videos or download from [here](https://drive.google.com/drive/folde
 xhost local:root
 
 export VIDEOS=<absolute path of videos folder>
+export EXPOSED_PORT=8000
 
 docker run \
 	-v $VIDEOS:/mnt/videos \
 	-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY \
-	--gpus=all -u qtuser -it \
+	-p $EXPOSED_PORT:8000 \
+	--gpus=all -u qtuser -itd \
 	qcuong98/ivos-demo
+
+docker exec -it <container_id, output of docker run command> bash
+
 ```
 
 ### In the container
 ```
-# export QT_DEBUG_PLUGINS=1 (for debugging)
+yarn install && yarn build
+./server/run_api.sh
 
 python gui.py \
 	[--gpus <gpu_ids for fbrs and stm>] \
@@ -36,6 +42,8 @@ python gui.py \
 
 # example: python gui.py --gpus 0 --mem 5 --video /mnt/videos/india.mp4
 ```
+
+Annotation results are shown in ```localhost:EXPORSED_PORT```
 
 #### An example of config file objects:
 *File **objects.json** describes that there are 3 object instances in the video sequence. Name of objects with id from 1 to 3 are **woman_1**, **woman_2**, and **woman_3**, respectively.*

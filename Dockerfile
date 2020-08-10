@@ -25,7 +25,7 @@ RUN echo "source activate env" > ~/.bashrc
 
 SHELL ["/bin/bash", "-c"]
 
-# Install libraries
+# Install DL libraries
 RUN source activate env && \
     conda config --add channels pytorch
 RUN source activate env && \
@@ -35,8 +35,17 @@ RUN source activate env && conda install -y \
 RUN source activate env && pip install -q Cython==0.29.21
 RUN source activate env && pip install -q tensorboard==2.2.2 easydict==1.9 PyYAML==5.3.1 PyQt5==5.15.0 davisinteractive==1.0.4
 
+# Install Web libraries
+RUN apt install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash
+RUN apt install nodejs
+RUN npm install --global yarn
+RUN source activate env && pip install -q gunicorn==20.0.4 Flask==1.1.2
+
 COPY . /app
 
+RUN chown -R $USER $HOME/.npm
+RUN chown -R $USER $HOME/.config
 RUN chown -R $USER /app
 USER $USER
 WORKDIR /app
