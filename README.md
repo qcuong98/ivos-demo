@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://www.youtube.com/watch?v=x2lotmG0Ts4"><img src="https://img.youtube.com/vi/x2lotmG0Ts4/0.jpg" alt="IVOS-Demo"></a>
+  <a href="https://www.youtube.com/watch?v=Fav3loN0qL8"><img src="https://img.youtube.com/vi/Fav3loN0qL8/0.jpg" alt="IVOS-Demo"></a>
 </div>
 
 # USAGE
