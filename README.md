@@ -2,6 +2,10 @@
   <a href="https://www.youtube.com/watch?v=Fav3loN0qL8"><img src="https://img.youtube.com/vi/Fav3loN0qL8/0.jpg" alt="IVOS-Demo"></a>
 </div>
 
+# REQUIREMENTS
+- Docker >= 19.03
+- CUDA >= 10.0
+
 # USAGE
 
 ## Prepare Videos
