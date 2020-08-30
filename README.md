@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://www.youtube.com/watch?v=Fav3loN0qL8"><img src="https://img.youtube.com/vi/Fav3loN0qL8/0.jpg" alt="IVOS-Demo"></a>
+  <a href="https://www.youtube.com/watch?v=h690-ziAOeU"><img src="https://img.youtube.com/vi/h690-ziAOeU/0.jpg" alt="Video Object Annotation Tool"></a>
 </div>
 
 # REQUIREMENTS
