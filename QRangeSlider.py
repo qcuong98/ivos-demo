@@ -65,7 +65,6 @@ class QRangeSlider(QWidget):
         #  Draw INTERVAL
 
         color = self.palette().color(QPalette.Highlight)
-        color.setAlpha(160)
         painter.setBrush(QBrush(color))
         painter.setPen(Qt.NoPen)
 

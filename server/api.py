@@ -47,6 +47,9 @@ def homepage():
             created_at = parse_date(meta["created_at"])
             meta["formatted_upload_date"] = created_at.strftime("%B %d, %Y")
             video_list.append({"id": video_id, "metadata": meta})
+    video_list.sort(
+        key=lambda video: parse_date(video["metadata"]["created_at"]),
+        reverse=True)
     return render_template("index.html", video_list=video_list)
 
 
@@ -107,6 +110,7 @@ def handle_requests_by_batch():
 
 threading.Thread(target=handle_requests_by_batch).start()
 
+
 @app.route('/<uuid:session_key>/<int:frame_id>/<int:object_id>.png',
            methods=['GET'])
 def get_obj_mask(session_key, frame_id, object_id):
@@ -122,7 +126,7 @@ def get_obj_mask(session_key, frame_id, object_id):
 
     session_dir = os.path.join(config['sessions_dir'], str(session_key))
     single_masks = extractor.extract(multi_mask,
-                                     api_utils.get_n_objects(session_dir))        
+                                     api_utils.get_n_objects(session_dir))
     output = io.BytesIO()
     single_masks[object_id].save(output, 'PNG')
     output.seek(0)

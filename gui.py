@@ -5,13 +5,14 @@ from PyQt5.QtWidgets import (QWidget, QApplication, QMainWindow, QComboBox,
                              QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox,
                              QTextEdit, QVBoxLayout, QMessageBox, QAction,
                              QInputDialog, QColorDialog, QSizePolicy, QSlider,
-                             QLCDNumber, QSpinBox)
+                             QLCDNumber, QSpinBox, QFrame)
 
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QPen
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
 from QRangeSlider import QRangeSlider
+from QMarkSlider import QMarkSlider
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -80,47 +81,56 @@ class App(QWidget):
         self.next_button.clicked.connect(self.on_next)
         self.play_button = QPushButton('Play')
         self.play_button.clicked.connect(self.on_play)
-        self.reset_button = QPushButton('Reset')
-        self.reset_button.clicked.connect(self.on_reset)
         self.run_button = QPushButton('Propagate')
         self.run_button.clicked.connect(self.on_run)
+        self.mark_button = QPushButton('Mark')
+        self.mark_button.clicked.connect(self.on_mark)
         self.visualize_button = QPushButton('Satisfied')
         self.visualize_button.clicked.connect(self.on_visualize)
-
-        # LCD
-        self.lcd = QTextEdit()
-        self.lcd.setReadOnly(True)
-        self.lcd.setMaximumHeight(28)
-        self.lcd.setMaximumWidth(150)
-        self.lcd.setText(f'{0: 3d} / {0: 3d} / {self.num_frames - 1: 3d}')
 
         self.log = QTextEdit()
         self.log.setReadOnly(True)
         self.log.setMaximumHeight(28)
-        self.log.setText('Ready')
+        self.log_text = 'Ready'
 
         # slide
+        self.mark_slider = QMarkSlider()
+        self.mark_slider.setRangeLimit(0, self.num_frames - 1)
+
         self.slider = QRangeSlider()
         self.slider.setRangeLimit(0, self.num_frames - 1)
         self.slider.setRange(0, self.num_frames - 1)
         self.slider.setValue(0)
-        self.slider.setTickPosition(QSlider.TicksBelow)
-        self.slider.setTickInterval(1)
+        # self.slider.setTickPosition(QSlider.TicksBelow)
+        # self.slider.setTickInterval(1)
         self.slider.valueChanged.connect(self.slide)
 
         # combobox
         self.overlay_combo = QComboBox(self)
-        self.overlay_combo.addItem("fade")
         self.overlay_combo.addItem("davis")
+        self.overlay_combo.addItem("fade")
         self.overlay_combo.addItem("checker")
         self.overlay_combo.addItem("color")
         self.overlay_combo.currentTextChanged.connect(self.set_viz_mode)
 
-        # spinbox
-        self.object_spin = QSpinBox(self)
-        self.object_spin.setMinimum(1)
-        self.object_spin.setMaximum(self.n_objects)
-        self.object_spin.setValue(1)
+        # interaction method
+        self.interaction_combo = QComboBox(self)
+        self.interaction_combo.addItem("CPSM")
+        self.interaction_combo.currentTextChanged.connect(
+            self.set_interaction_method)
+
+        # propagation method
+        self.propagation_combo = QComboBox(self)
+        self.propagation_combo.addItem("MRGS")
+        self.propagation_combo.addItem("GIS")
+        self.propagation_combo.addItem("IRIF")
+        self.propagation_combo.currentTextChanged.connect(
+            self.set_propagation_method)
+
+        # object combo
+        self.object_combo = QComboBox(self)
+        for x in config['objects']:
+            self.object_combo.addItem(x)
 
         # canvas
         self.fig = plt.Figure()
@@ -137,28 +147,45 @@ class App(QWidget):
         self.cidmotion = self.fig.canvas.mpl_connect('motion_notify_event',
                                                      self.on_motion)
 
+
         # navigator
         navi = QHBoxLayout()
-        navi.addWidget(self.lcd)
         navi.addWidget(self.prev_button)
         navi.addWidget(self.play_button)
         navi.addWidget(self.next_button)
         navi.addStretch(1)
-        navi.addWidget(QLabel('Overlay Mode'))
-        navi.addWidget(self.overlay_combo)
+
+        object_layout = QHBoxLayout()
+        object_layout.addWidget(QLabel('Object'))
+        object_layout.addWidget(self.object_combo)
+        object_layout.addWidget(self.space_line())
+        object_layout.addWidget(QLabel('Overlay'))
+        object_layout.addWidget(self.overlay_combo)
+
+        navi.addWidget(self.frame_border(object_layout))
         navi.addStretch(1)
-        navi.addWidget(QLabel('Object Strokes'))
-        navi.addWidget(self.object_spin)
-        # navi.addStretch(1)
-        # navi.addWidget(self.reset_button)
+
+        # method frame
+        method_layout = QHBoxLayout()
+        method_layout.addWidget(QLabel('Method: '))
+        method_layout.addWidget(QLabel('Interaction'))
+        method_layout.addWidget(self.interaction_combo)
+        method_layout.addWidget(QLabel('Propagation'))
+        method_layout.addWidget(self.propagation_combo)
+        method_layout.addWidget(self.space_line())
+        method_layout.addWidget(self.run_button)
+        method_layout.addWidget(self.space_line())
+        method_layout.addWidget(self.mark_button)
+
+        navi.addWidget(self.frame_border(method_layout))
         navi.addStretch(1)
-        navi.addWidget(self.run_button)
-        navi.addStretch(1)
+        
         navi.addWidget(self.visualize_button)
 
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         layout.addWidget(self.log)
+        layout.addWidget(self.mark_slider)
         layout.addWidget(self.slider)
         layout.addLayout(navi)
         layout.setStretchFactor(navi, 1)
@@ -172,7 +199,7 @@ class App(QWidget):
         self.timer.timeout.connect(self.on_time)
 
         # initialize visualize
-        self.viz_mode = 'fade'
+        self.viz_mode = self.overlay_combo.itemText(0)
         self.cursur = 0
         self.range = (0, self.num_frames - 1)
         self.on_showing = None
@@ -185,6 +212,17 @@ class App(QWidget):
         self.drawn_strokes = []
 
         self.show()
+
+    def space_line(self):
+        line = QFrame()
+        line.setFrameStyle(QFrame.VLine + QFrame.Sunken)
+        return line
+
+    def frame_border(self, layout):
+        frame = QFrame()
+        frame.setFrameStyle(QFrame.StyledPanel + QFrame.Sunken)
+        frame.setLayout(layout)
+        return frame
 
     def show_current(self):
         if self.viz_mode == 'fade':
@@ -208,9 +246,13 @@ class App(QWidget):
             self.on_showing.remove()
         self.on_showing = self.ax.imshow(viz)
         self.canvas.draw()
-        l, r = self.slider.getRange()
-        self.lcd.setText(f'{l: 3d} / {self.cursur: 3d} / {r: 3d}')
+        self.update_log()
         self.slider.setValue(self.cursur)
+
+    def update_log(self):
+        l, r = self.slider.getRange()
+        txt = f'[{l: 3d} / {self.cursur: 3d} / {r: 3d}] ' + self.log_text
+        self.log.setText(txt)
 
     def reset_scribbles(self):
         self.scribbles = {}
@@ -229,28 +271,42 @@ class App(QWidget):
         self.viz_mode = self.overlay_combo.currentText()
         self.show_current()
 
+    def set_interaction_method(self):
+        pass
+
+    def set_propagation_method(self):
+        pass
+
     def slide(self):
         self.clear_strokes()
         self.reset_scribbles()
         self.range = self.slider.getRange()
         self.cursur = self.slider.getValue()
         self.show_current()
-        # print('slide')
 
     def on_run(self):
         self.run_button.setEnabled(False)
-        self.log.setText(
-            f'[RUNNING] Propagation from frame {self.range[0]} to frame {self.range[1]}'
-        )
+        self.log_text = f'[RUNNING] Propagation from frame {self.range[0]} to frame {self.range[1]}'
         self.model.run_propagation(self.range)
-        self.log.setText(
-            f'[DONE] Propagation from frame {self.range[0]} to frame {self.range[1]}'
-        )
+        self.log_text = f'[DONE] Propagation from frame {self.range[0]} to frame {self.range[1]}'
         self.run_button.setEnabled(True)
         # clear scribble and reset
         self.show_current()
         self.reset_scribbles()
         self.clear_strokes()
+
+    def on_mark(self):
+        l, r = self.slider.getRange()
+        self.mark_slider.addMarkInterval(l, r)
+        min_l, max_r = self.mark_slider.getMaximumRange()
+        if l < min_l or l > max_r:
+            l = min_l
+        if r < min_l or r > max_r:
+            r = max_r
+        self.slider.setRange(l, r)
+        self.range = self.slider.getRange()
+        self.cursur = (l + r) // 2
+        self.show_current()
 
     def on_visualize(self):
         video_dir = os.path.join('server', 'static', 'sessions',
@@ -283,8 +339,8 @@ class App(QWidget):
         with open(json_dir, 'w') as outfile:
             json.dump(self.config, outfile)
 
-        self.log.setText(
-            f'Visualization of session {self.session_id} is ready')
+        self.log_text = f'Visualization of session {self.session_id} is ready'
+        self.update_log()
 
     def on_prev(self):
         self.clear_strokes()
@@ -322,7 +378,7 @@ class App(QWidget):
             self.stroke['path'].append(
                 [event.xdata / self.width, event.ydata / self.height])
             if event.button == Qt.LeftButton:
-                self.stroke['object_id'] = self.object_spin.value()
+                self.stroke['object_id'] = self.object_combo.currentIndex() + 1
             else:
                 self.stroke['object_id'] = 0
             self.stroke['start_time'] = time.time()
@@ -356,9 +412,9 @@ class App(QWidget):
         self.on_drawing = None
 
         self.run_button.setEnabled(False)
-        self.log.setText(f'[RUNNING] Interaction on frame {self.cursur}')
+        self.log_text = f'[RUNNING] Interaction on frame {self.cursur}'
         self.model.run_interaction(self.scribbles, self.range)
-        self.log.setText(f'[DONE] Interaction on frame {self.cursur}')
+        self.log_text = f'[DONE] Interaction on frame {self.cursur}'
         self.run_button.setEnabled(True)
         self.show_current()
 
