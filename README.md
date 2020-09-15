@@ -62,7 +62,7 @@ Annotation results are shown in ```localhost:EXPORSED_PORT```
 ```
 #### If json config is not specified, name of objects will be **object_1**, **object_2**, ..., **object_5**.
 
-## Run by Source
+## Run By Source
 
 ### Download pretrained weights
 - [f-BRS](https://drive.google.com/file/d/1gO27zyZuW2o48MbpBR8L4-90EPG3kaJE/view?usp=sharing): save in **segmentation/fbrs/weights/resnet50_dh128_lvis.pth**
