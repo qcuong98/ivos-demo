@@ -31,9 +31,9 @@ RUN source activate env && \
 RUN source activate env && \
     conda config --add channels conda-forge
 RUN source activate env && conda install -y \
-    pytorch=1.4.0 torchvision cudatoolkit=10.0 tqdm
+    pytorch=1.4.0 torchvision cudatoolkit=10.0 tqdm pyqt==5.9.2
 RUN source activate env && pip install -q Cython==0.29.21
-RUN source activate env && pip install -q tensorboard==2.2.2 easydict==1.9 PyYAML==5.3.1 PyQt5==5.15.0 davisinteractive==1.0.4
+RUN source activate env && pip install -q tensorboard==2.2.2 easydict==1.9 PyYAML==5.3.1 davisinteractive==1.0.4
 
 # Install Web libraries
 RUN apt install -y curl
