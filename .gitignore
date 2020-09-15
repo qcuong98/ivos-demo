@@ -1,5 +1,4 @@
 **/*.pth
-**/*.pkl
 
 server/static/sessions/**
 

@@ -12,7 +12,7 @@
 
 Prepare your videos or download from [here](https://drive.google.com/drive/folders/1qMKeQjGUvPwiIcOZEMUtB0n5clegyvN7?usp=sharing) 
 
-## Docker Image
+## Run By Docker Image
 
 ### Create Docker container
 ```
@@ -61,6 +61,27 @@ Annotation results are shown in ```localhost:EXPORSED_PORT```
 }
 ```
 #### If json config is not specified, name of objects will be **object_1**, **object_2**, ..., **object_5**.
+
+## Run by Source
+
+### Download pretrained weights
+- [f-BRS](https://drive.google.com/file/d/1gO27zyZuW2o48MbpBR8L4-90EPG3kaJE/view?usp=sharing): save in **segmentation/fbrs/weights/resnet50_dh128_lvis.pth**
+- [STM](https://drive.google.com/file/d/1sgf2FhDN6XNf9AQPrD6mXLdUhnXH1t4r/view?usp=sharing): save in **propagation/STM/STM_weights.pth**
+
+### Annotation Tool
+```
+python gui.py \
+	[--gpus <gpu_ids for fbrs and stm>] \
+	[--mem <memory size>] \
+	[--config <json directory>] \
+	[--step <step frame>] \
+	--video <video-path>.mp4
+```
+### Semantic Video Website
+```
+yarn install && yarn build
+./server/run_api.sh <port>
+```
 
 # CREDIT
 
