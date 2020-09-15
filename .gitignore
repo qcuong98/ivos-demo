@@ -1,6 +1,6 @@
 **/*.pth
 
-server/static/sessions/**
+# server/static/sessions/**
 
 .vscode/
 **/__pycache__/
